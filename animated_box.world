@@ -1,0 +1,24 @@
+<?xml version="1.0"?> 
+<sdf version="1.4">
+  <world name="animated_box_world">
+
+    <!-- Ground Plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <model name="pioneer1">
+      <include>
+          <static>false</static>
+          <uri>model://pioneer2dx</uri>
+      </include>
+
+      <!-- <plugin name="animated_box2" filename="libanimated_box2.so"/> -->
+      <plugin name="turn_wheels" filename="libturn_wheels.so"/>
+    </model>
+  </world>
+</sdf>
