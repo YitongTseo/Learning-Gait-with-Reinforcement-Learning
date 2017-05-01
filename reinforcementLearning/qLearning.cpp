@@ -1,7 +1,8 @@
 #include "qLearning.h"
 
 Action qLearningAgent::getAction(const State& state){
-	std::vector<tuple<int, int>>& possibleActions = environment.getPossibleActions(state);
+	std::vector<Action>& possibleActions = environment.getPossibleActions(state);
+
 	// if no possible actions.
 	if (possibleAction.isempty()) {
 		//TODO: maybe have to reset.
@@ -35,7 +36,8 @@ void qLearningAgent::updateBeliefs(const State& state,
 	float sample = reward + GAMMA * qLearningAgent::computeValueFromQValues(nextState);
 	float oldValue = 0.0f;
 
-	const tuple<State, Action> stateAction(std::make_tuple(state, action));
+	//const tuple<State, Action> stateAction(std::make_tuple(state, action));
+	const StateAction stateAction(state, action);
 	if (beliefDict.count(stateAction)) {
 		oldValue = beliefDict.of(stateAction);
 	}
@@ -47,7 +49,7 @@ void qLearningAgent::updateBeliefs(const State& state,
 
 Action qLearningAgent::computeActionFromQValues(const State& state){
 
-	std::vector<tuple<int, int>>& actions = state->getPossibleActions(state);
+	std::vector<Action>& actions = state->getPossibleActions(state);
 	float bestValue = -10000000.0f; //TODO: check if there is negative inf in C++
 	int bestActionIndex = null;
 
@@ -70,12 +72,14 @@ Action qLearningAgent::computeActionFromQValues(const State& state){
 }
 
 float qLearningAgent::getQValue(const State& state, const Action& action) {
-	tuple<State&, Action&> tuple = std::make_tuple(state, action);
-	return beliefDict.at(tuple); //using the [ ] is bad. use at() so if tuple isn't in beliefDict it'll throw an execption
+	//tuple<State&, Action&> tuple = std::make_tuple(state, action);
+	StateAction sa(state, action);
+
+	return beliefDict.at(sa); //using the [ ] is bad. use at() so if tuple isn't in beliefDict it'll throw an execption
 }
 
 float qLearningAgent::computeValueFromQValues(const State& state){
-	std::vector<tuple<int, int>>& actions = state->getPossibleActions(state);
+	std::vector<Action>& actions = state->getPossibleActions(state);
 
 	if (actions.isempty()) {
 		return 0.0f;
@@ -99,3 +103,5 @@ Action qLearningAgent::getPolicy(State& state) {
 float qLearningAgent::getValue(State& state) {
 	return computeValueFromQValues(state);
 }
+
+~qLearningAgent::qLearningAgent();
