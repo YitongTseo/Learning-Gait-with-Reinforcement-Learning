@@ -17,9 +17,6 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 add_library(animated_box SHARED animated_box.cc)
 target_link_libraries(animated_box ${GAZEBO_LIBRARIES})
 
-add_library(animated_box2 SHARED animated_box2.cc)
-target_link_libraries(animated_box2 ${GAZEBO_LIBRARIES})
-
 add_library(turn_wheels SHARED turn_wheels.cc)
 target_link_libraries(turn_wheels ${GAZEBO_LIBRARIES})# ${Boost_LIBRARIES})
 

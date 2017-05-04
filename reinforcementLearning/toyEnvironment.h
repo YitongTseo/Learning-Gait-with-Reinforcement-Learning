@@ -13,7 +13,7 @@ public:
 	State(int pos): position(pos) {
 	}
 
-	~State();
+	~State() {}
 };
 
 class Action {
@@ -23,7 +23,7 @@ public:
 	Action(int m): move(m) {
 	}
 
-	~Action();
+	~Action() {}
 };
 
 class StateAction {
@@ -39,7 +39,7 @@ public:
 	            && other.action.move == action.move);
 	 }
 
-	~StateAction();
+	~StateAction() {}
 
 };
 
@@ -67,13 +67,14 @@ struct hash<StateAction>
 class Environment {
 
 public:
-	virtual State getCurrentState();
-	virtual std::vector<Action>  getPossibleActions();
-	virtual void doAction(Action& a);
-	virtual float getReward(State& state, Action& a);
-	virtual void reset();
-	virtual bool isTerminal(); //Could implement isTerminal wihout making it virtual, but we leave the option open for now
-	virtual ~Environment() {}
+  virtual State getCurrentState() {return State(0);}
+  virtual std::vector<Action>  getPossibleActions(const State& s) { return std::vector<Action>(); }
+  virtual void doAction(Action& a) {}
+  virtual float getReward(State& state, Action& a) {return 0.0f;}
+  virtual void reset() {}
+  virtual bool isTerminal() {return false;} //Could implement isTerminal wihout making it virtual, but we leave the option open for now
+  Environment() {};
+  virtual ~Environment() {};
 };
 
 
@@ -103,7 +104,7 @@ public:
 		return 0;
 	}
 
-	State getCurrentState() {//override {
+	virtual State getCurrentState() {//override {
 		return state;
 	}
 
@@ -122,7 +123,7 @@ public:
 	}
 
 	void doAction(Action& a) {//override {
-		state.position += a.move;
+	  state.position += a.move;
 	}
 
 	void reset() {//override {
@@ -137,6 +138,6 @@ public:
 		return false;
 	}
 
-	~ToyEnvironment() {};
+	virtual ~ToyEnvironment() {};
 
 };

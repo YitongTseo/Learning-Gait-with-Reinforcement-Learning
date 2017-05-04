@@ -1,21 +1,21 @@
 #include "qLearning.h"
 
 Action qLearningAgent::getAction(const State& state){
-	std::vector<Action>& possibleActions = environment.getPossibleActions(state);
+	const std::vector<Action>& possibleActions = environment.getPossibleActions(state);
 
 	// if no possible actions.
-	if (possibleAction.isempty()) {
+	if (possibleActions.size() == 0) {
 		//TODO: maybe have to reset.
-		return null;
+		return NULL;
 	}
 
 	int r = std::rand(); //returns a large random number
-	float f = float(r) / float(std::RAND_MAX);
+	float f = float(r) / float(RAND_MAX);
 
 	if (f < EPSILON) {
 		r = std::rand();
 		int randomIndex = r % possibleActions.size();
-		return vector.at(randomIndex); //always use at(), is bound checked.
+		return possibleActions.at(randomIndex); //always use at(), is bound checked.
 	}
 
 	return computeActionFromQValues(state);
@@ -29,17 +29,17 @@ Action qLearningAgent::getAction(const State& state){
 //and the new state. 
 //then call update Beliefs with those arguments.
 void qLearningAgent::updateBeliefs(const State& state,
-								   const Action$ action,
-								   const State& nextState,
-								   const float reward){
+				   const Action& action,
+	       			   const State& nextState,
+   				   const float reward){
 
-	float sample = reward + GAMMA * qLearningAgent::computeValueFromQValues(nextState);
-	float oldValue = 0.0f;
+  float sample = reward + GAMMA; //* qLearningAgent::computeValueFromQValues(nextState); TODO RESTORE
+  float oldValue = 0.0f;
 
 	//const tuple<State, Action> stateAction(std::make_tuple(state, action));
 	const StateAction stateAction(state, action);
 	if (beliefDict.count(stateAction)) {
-		oldValue = beliefDict.of(stateAction);
+	  oldValue = beliefDict.at(stateAction);
 	}
 
 	beliefDict.at(stateAction) = (1 - ALPHA) * oldValue + ALPHA * sample;
@@ -49,12 +49,12 @@ void qLearningAgent::updateBeliefs(const State& state,
 
 Action qLearningAgent::computeActionFromQValues(const State& state){
 
-	std::vector<Action>& actions = state->getPossibleActions(state);
+	const std::vector<Action>& actions = environment.getPossibleActions(state);
 	float bestValue = -10000000.0f; //TODO: check if there is negative inf in C++
-	int bestActionIndex = null;
+	int bestActionIndex = 0; //Why was this NULL before?
 
-	if (actions.isempty()) {
-		return null;
+	if (actions.size() == 0) {
+	  return NULL;
 	}
 
 	for (int i = 0; i <= actions.size(); ++i){
@@ -79,9 +79,9 @@ float qLearningAgent::getQValue(const State& state, const Action& action) {
 }
 
 float qLearningAgent::computeValueFromQValues(const State& state){
-	std::vector<Action>& actions = state->getPossibleActions(state);
+  const std::vector<Action>& actions = environment.getPossibleActions(state);
 
-	if (actions.isempty()) {
+	if (actions.size() == 0) {
 		return 0.0f;
 	}
 
@@ -90,18 +90,18 @@ float qLearningAgent::computeValueFromQValues(const State& state){
 	for (int i = 0; i <= actions.size(); ++i){
 		Action action = actions.at(i);
 		float qValue = getQValue(state, action);
-		bestValue = std::max(bestValue, qValue)
+		bestValue = std::max(bestValue, qValue);
 	}
 
 	return bestValue;
 }
 
-Action qLearningAgent::getPolicy(State& state) {
+Action qLearningAgent::getPolicy(const State& state) {
 	return computeActionFromQValues(state);
 }
 
-float qLearningAgent::getValue(State& state) {
+float qLearningAgent::getValue(const State& state) {
 	return computeValueFromQValues(state);
 }
 
-~qLearningAgent::qLearningAgent();
+qLearningAgent::~qLearningAgent(){}
