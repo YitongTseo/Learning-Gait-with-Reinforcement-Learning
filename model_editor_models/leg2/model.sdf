@@ -1,0 +1,122 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='leg1'>
+    <link name='r_calf'>
+      <pose frame=''>0 0 0.2 0 0 0</pose>
+      <inertial>
+        <mass>10</mass>
+      </inertial>
+      <gravity>1</gravity>
+      <self_collide>1</self_collide>
+      <visual name='r_calf_geom_visual'>
+        <pose frame=''>0 0 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.1</radius>
+            <length>0.4 </length>
+          </cylinder>
+        </geometry>
+      </visual>
+      <collision name='r_calf_geom'>
+        <pose frame=''>0 0 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.1</radius>
+            <length>0.4</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name='r_thigh_lift'>
+      <pose frame=''>0 0 0.7 0 0 0</pose>
+      <inertial>
+        <mass>8</mass>
+      </inertial>
+      <gravity>1</gravity>
+      <self_collide>1</self_collide>
+
+      <visual name='r_thigh_lift_geom_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.12</radius>
+            <length>0.6</length>
+          </cylinder>
+        </geometry>
+      </visual>
+      <collision name='r_thigh_lift_geom'>
+        <pose frame=''>0 0 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.12</radius>
+            <length>0.7</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name='hip'>
+      <pose frame=''>0 0 1.06 0 0 0</pose>
+      <inertial>
+        <mass>1</mass>
+      </inertial>
+      <gravity>1</gravity>
+      <self_collide>1</self_collide>
+      <visual name='hip_geom_visual'>
+        <pose frame=''>0 0 0 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.12</radius>
+          </sphere>
+        </geometry>
+      </visual>
+      <collision name='hip_geom'>
+        <pose frame=''>0 0 0 0 0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.06</radius>
+          </sphere>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name='r_calf_joint' type='revolute'>
+      <parent>r_thigh_lift</parent>
+      <child>r_calf</child>
+      <pose frame=''>0 0 0.2 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>1</use_parent_model_frame>
+        <limit>
+          <lower>-1.5708</lower>
+          <upper>1.5708</upper>
+        </limit>
+        <dynamics>
+          <friction>0.8</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <joint name='r_thigh_lift_joint' type='revolute'>
+      <parent>hip</parent>
+      <child>r_thigh_lift</child>
+      <pose frame=''>0 0 0.3 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>1</use_parent_model_frame>
+        <limit>
+          <lower>-1.5708</lower>
+          <upper>1.5708</upper>
+        </limit>
+        <dynamics>
+          <friction>.5</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <static>0</static>
+    <allow_auto_disable>1</allow_auto_disable>
+
+  </model>
+</sdf>

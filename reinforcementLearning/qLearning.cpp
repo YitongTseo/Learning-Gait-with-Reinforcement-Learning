@@ -1,26 +1,23 @@
 #include "qLearning.h"
 
-Action qLearningAgent::getAction(const State& state){
-	const std::vector<Action>& possibleActions = environment.getPossibleActions(state);
-
+Action qLearningAgent::getAction(){
+	const std::vector<Action> possibleActions = environment->getPossibleActions();
 	// if no possible actions.
 	if (possibleActions.size() == 0) {
 		//TODO: maybe have to reset.
-		return NULL;
+		return Action(-9999,9999); //should really reset.
 	}
 
-	int r = std::rand(); //returns a large random number
-	float f = float(r) / float(RAND_MAX);
+	//randomFloat is between 0 and 1
+	float randomFloat = float(std::rand()) / float(RAND_MAX);
 
-	if (f < EPSILON) {
-		r = std::rand();
-		int randomIndex = r % possibleActions.size();
-		return possibleActions.at(randomIndex); //always use at(), is bound checked.
+	if (randomFloat < EPSILON) {
+		int randomIndex = std::rand() % possibleActions.size();
+		return possibleActions.at(randomIndex); //always use at(): it bound checks, [] does not
 	}
 
-	return computeActionFromQValues(state);
+	return computeActionFromQValues();
 }
-
 
 //outside thing calls getAction, gets the action.
 //Make sure to save the old state.
@@ -29,57 +26,56 @@ Action qLearningAgent::getAction(const State& state){
 //and the new state. 
 //then call update Beliefs with those arguments.
 void qLearningAgent::updateBeliefs(const State& state,
-				   const Action& action,
-	       			   const State& nextState,
-   				   const float reward){
+								   const Action& action,
+					       		   const State& nextState,
+				   				   const float reward){
+  	float sample = reward + GAMMA * computeValueFromQValues();
+  	float oldValue = 0.0f;
 
-  float sample = reward + GAMMA; //* qLearningAgent::computeValueFromQValues(nextState); TODO RESTORE
-  float oldValue = 0.0f;
-
-	//const tuple<State, Action> stateAction(std::make_tuple(state, action));
 	const StateAction stateAction(state, action);
-	if (beliefDict.count(stateAction)) {
+	
+	if (beliefDict.count(stateAction) > 0) {
 	  oldValue = beliefDict.at(stateAction);
 	}
-
-	beliefDict.at(stateAction) = (1 - ALPHA) * oldValue + ALPHA * sample;
-
+	beliefDict[stateAction] = (1 - ALPHA) * oldValue + ALPHA * sample;
 }
 
 
-Action qLearningAgent::computeActionFromQValues(const State& state){
+Action qLearningAgent::computeActionFromQValues(){
 
-	const std::vector<Action>& actions = environment.getPossibleActions(state);
+	const std::vector<Action>& actions = environment->getPossibleActions();
 	float bestValue = -10000000.0f; //TODO: check if there is negative inf in C++
-	int bestActionIndex = 0; //Why was this NULL before?
+	//storesindices for all actions with equally best qValues so we can break ties later.
+	std::vector<int> bestActionIndices;
 
-	if (actions.size() == 0) {
-	  return NULL;
-	}
-
-	for (int i = 0; i <= actions.size(); ++i){
+	for (int i = 0; i < actions.size(); ++i){
 		Action action = actions.at(i);
-		float qValue = qLearningAgent::getQValue(state, action);
 
-		if (bestValue < qValue) {
-			//TODO: store all best actions with equal q values.
-			//then randomly tie break.
-			bestActionIndex = i;
+		float qValue = getQValue(action);
+
+		if (bestValue <= qValue) {
+			if (bestValue < qValue) {
+				//Just found a new bestValue so time to clear out the inferior indices.
+				bestActionIndices.clear();
+			}
+			//Store all best actions with equal q values then randomly tie break.
+			bestActionIndices.push_back(i);
 			bestValue = qValue;
 		}
 	}
+	int bestActionIndex = bestActionIndices.at(std::rand() % bestActionIndices.size());
 	return actions.at(bestActionIndex);
 }
 
-float qLearningAgent::getQValue(const State& state, const Action& action) {
-	//tuple<State&, Action&> tuple = std::make_tuple(state, action);
+float qLearningAgent::getQValue(const Action& action) {
+	State state(environment->getCurrentState());
 	StateAction sa(state, action);
-
-	return beliefDict.at(sa); //using the [ ] is bad. use at() so if tuple isn't in beliefDict it'll throw an execption
+	//if beliefDict contains sa then return the value for sa, else 0.0f
+	return (beliefDict.count(sa) > 0) ? beliefDict.at(sa) : 0.0f;
 }
 
-float qLearningAgent::computeValueFromQValues(const State& state){
-  const std::vector<Action>& actions = environment.getPossibleActions(state);
+float qLearningAgent::computeValueFromQValues(){
+  const std::vector<Action>& actions = environment->getPossibleActions();
 
 	if (actions.size() == 0) {
 		return 0.0f;
@@ -87,21 +83,21 @@ float qLearningAgent::computeValueFromQValues(const State& state){
 
 	float bestValue = -10000000.0f; //TODO: check if there is negative inf in C++
 
-	for (int i = 0; i <= actions.size(); ++i){
+	for (int i = 0; i < actions.size(); ++i){
 		Action action = actions.at(i);
-		float qValue = getQValue(state, action);
+		float qValue = getQValue(action);
 		bestValue = std::max(bestValue, qValue);
 	}
 
 	return bestValue;
 }
 
-Action qLearningAgent::getPolicy(const State& state) {
-	return computeActionFromQValues(state);
+Action qLearningAgent::getPolicy() {
+	return computeActionFromQValues();
 }
 
-float qLearningAgent::getValue(const State& state) {
-	return computeValueFromQValues(state);
+float qLearningAgent::getValue() {
+	return computeValueFromQValues();
 }
 
 qLearningAgent::~qLearningAgent(){}

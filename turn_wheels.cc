@@ -17,9 +17,10 @@
 #include <boost/bind.hpp>
 #include <gazebo/gazebo.hh>
 #include <ignition/math.hh>
-//#include <math/gzmath.hh>
+#include "reinforcementLearning/qLearning.cpp"
 #include <gazebo/physics/physics.hh>
 #include <gazebo/common/common.hh>
+#include <stdlib.h> 
 #include <stdio.h>
 #include <vector>
 
@@ -40,6 +41,12 @@ namespace gazebo
       //store the pointers to the joints
       this->jointsVector = this->model->GetJoints();
 
+      std::cout<<"\n1";
+      we = WheelsEnvironment();
+      std::cout<<"2";
+      ql = qLearningAgent(we);
+      std::cout<<"3\n";
+
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
           boost::bind(&TurnWheels::OnUpdate, this, _1));
@@ -52,22 +59,48 @@ namespace gazebo
     // Apply a small linear velocity to the model.
     //this->model->SetLinearVel(math::Vector3(0.06, 0, 0));
 
+    //     if (this->we.isTerminal(relativePosition.x, relativePosition.z)){
+//       this->we.reset();
+//       this->model.reset();//TODO!: teleport the model back to original position
+//     }
+
     physics::JointPtr leftJoint = this->jointsVector[0];
     physics::JointPtr rightJoint = this->jointsVector[1];
 
-    double velocity = leftJoint->GetVelocity(0);
 
-    leftJoint->SetVelocity(0, .7);
+    State oldState(this->we.getCurrentState());
+    Action action = this->ql.getAction();
 
-    std::cout << "\n\nhey! what's the left joint velocity? ";
-    std::cout << velocity;
+    cout << "\nleft wheel velocity " << oldState.leftWheelVelocity;
+    cout << "\nleft wheel increment " << action.leftIncrement;
 
-    // tuple = takeStep(...)
-    // leftWheel = tuple[0]
+    cout << "\nright wheel velocity " << oldState.leftWheelVelocity;
+    cout << "\nright wheel increment " << action.leftIncrement;
+    
+    cout << "\n size of bucket" << we.wheelBuckets.size();
+
+    //find the reward
+    float reward = this->we.getReward(oldState, action);
+
+    cout << "\nreward " << reward;
+
+    //update the environment
+    this->we.doAction(action);
+    cout << "\nleft wheel velocity " << oldState.leftWheelVelocity;
+
+
+    // leftJoint->SetVelocity(0, .7);
+    State nextState = this->we.getCurrentState();
+    //move the actual joints in Gazebo
+    leftJoint->SetVelocity(0, nextState.leftWheelVelocity);
+    rightJoint->SetVelocity(0, nextState.rightWheelVelocity);
+
+
+
 
     math::Vector3 relativeVelocity = this->model->GetRelativeLinearVel();
     math::Pose relativePose = this->model->GetRelativePose();
-    math::Quaternion relativeRotation = relativePose.rot;
+    math::Vector3 relativeRotation = relativePose.rot.GetAsEuler();
     math::Vector3 relativePosition = relativePose.pos;
 
     std::cout << "\nrelative POSITION: x: " << relativePosition.x << " y: " 
@@ -76,7 +109,21 @@ namespace gazebo
     std::cout << "\n         relative VELOCITY: x: " << relativeVelocity.x << " y: " 
       << relativeVelocity.y << " z: " << relativeVelocity.z;
 
+    std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
+
+    std::cout << "\n robotOrientation" << nextState.robotOrientation << endl;
+
+    //learn to move forward in the x direction
+    this->we.setRobotReward(relativePosition.x - abs(relativePosition.y));
+    this->we.setRobotOrientation(relativeRotation.z);
+    
+    //then call update Beliefs with those arguments.
+    this->ql.updateBeliefs(oldState, action, nextState, reward);
+
   }
+
+  private: WheelsEnvironment we;
+  private: qLearningAgent ql;
 
     // Pointer to the model
   private: physics::ModelPtr model;

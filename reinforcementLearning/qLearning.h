@@ -1,42 +1,55 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>    // std::max
-#include "toyEnvironment.h"
+#include <algorithm>
+#include "wheeledRobotEnvironment2.h"
 
 using namespace std;
 
 class qLearningAgent {
 
 protected:
-	Environment environment;
-	const float ALPHA;
-	const float GAMMA;
-	const float EPSILON;
-	std::unordered_map<StateAction, float> beliefDict;
-
+	Environment *environment;
+	float ALPHA;
+	float GAMMA;
+	float EPSILON;
+	//std::unordered_map<StateAction, float> beliefDict;
+	float computeValueFromQValues();
+	Action computeActionFromQValues();
+	float getQValue(const Action& action);
 
 public:
+	//TODO: make this protected again.
+	std::unordered_map<StateAction, float> beliefDict;
 	void updateBeliefs(const State& state,
 			   const Action& action,
 			   const State& nextState,
 			   const float reward);
 
-	qLearningAgent(Environment& e) : ALPHA(0.9f), GAMMA(0.1f), EPSILON(0.0f) {
-		environment = e;
+	qLearningAgent(): ALPHA(0.9f), GAMMA(0.1f), EPSILON(0.1f){}
+
+	qLearningAgent(Environment& e, 
+				   float alpha = 0.9f, 
+				   float gamma = 0.1f, 
+				   float epsilon = 0.1f) : ALPHA(alpha), GAMMA(gamma), EPSILON(epsilon) {
+		//we want to store _the pointer_ to e, not the value of e.
+		environment = &e;
 	}
 
-	Action getAction(const State& state);
+	qLearningAgent& operator=( const qLearningAgent& other ) {
+     	ALPHA = other.ALPHA;
+      	GAMMA = other.GAMMA;
+      	EPSILON = other.EPSILON;
+      	environment = other.environment;
 
-	float computeValueFromQValues(const State& state);
+      	return *this;
+  	}
 
-	Action computeActionFromQValues(const State& state);
+	Action getAction();
 
-	float getQValue(const State& state, const Action& action);
+	Action getPolicy();
 
-	Action getPolicy(const State& state);
-
-	float getValue(const State& state);
+	float getValue();
 	
 	~qLearningAgent();
 };

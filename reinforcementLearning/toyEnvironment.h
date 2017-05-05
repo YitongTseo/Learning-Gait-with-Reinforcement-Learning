@@ -68,7 +68,7 @@ class Environment {
 
 public:
   virtual State getCurrentState() {return State(0);}
-  virtual std::vector<Action>  getPossibleActions(const State& s) { return std::vector<Action>(); }
+  virtual std::vector<Action>  getPossibleActions() { return std::vector<Action>(); }
   virtual void doAction(Action& a) {}
   virtual float getReward(State& state, Action& a) {return 0.0f;}
   virtual void reset() {}
@@ -81,11 +81,18 @@ public:
 class ToyEnvironment : public Environment {
 
 protected:
-	//  -------------------------
-	// |    |    |    |    |     |
-	// |  R |    |  S |    |     |
-	//  -------------------------
-	//   0     1    2    3    4
+
+	//  ---------------------------------------
+	// |    |    |    |    |    |    |    |    |
+	// |-100|-100|-100|-100|-100|-100|-100|-100|
+	//  ----------------------------------------
+	// |    |    |    |    |    |    |    |    |
+	// |  1 |    |  S |    |    |    |    |100000|
+	//  ----------------------------------------
+	// |    |    |    |    |    |    |    |    |
+	// |-100|-100|-100|-100|-100|-100|-100|-100|
+	//  ----------------------------------------
+	//   0    1    2    3    4    5    6    7
 
 	int rewardPosition; 
 	State state;
@@ -98,41 +105,70 @@ public:
 
 	//state is old state (before the action is taken)
 	float getReward(State& state, Action& a) { //override{
+		//moving up or down is not okay.
+		if (a.move == 2 || a.move == -2) {
+			return -100;
+		}
+
 		if ((state.position + a.move) == 0) {
 			return 1;
+		}
+
+		if ((state.position + a.move) == 7) {
+			return 100000;
 		}
 		return 0;
 	}
 
-	virtual State getCurrentState() {//override {
+	//returns state not by pointer but by value.
+	virtual State getCurrentState() {
 		return state;
 	}
 
-	std::vector<Action> getPossibleActions() {//override {
+	virtual std::vector<Action> getPossibleActions() {//override {
 		int position = state.position;
 		std::vector<Action> vecOfActions;
 		vecOfActions.push_back(Action(0));
-		if (position < 4) {
+		if (position < 7) {
 			vecOfActions.push_back(Action(1));
 		}
 		if (position > 0) {
 			vecOfActions.push_back(Action(-1));
 		}
 
+		//----Take out if you want to stay in 1D----
+		//represents going "up"
+		vecOfActions.push_back(Action(2));
+		//represents going "down"
+		vecOfActions.push_back(Action(-2));
+
 		return vecOfActions;
 	}
 
-	void doAction(Action& a) {//override {
+	void doAction(Action& a) {
 	  state.position += a.move;
+
+	  //keep the position within bounds, not strictly necesary.
+	  if (state.position > 7) {
+	  	state.position = 7;
+	  }
+	  if (state.position < 0) {
+	  	state.position = 0;
+	  }
+
+	  //----Take out if you want to stay in 1D----
+	  if ((a.move == 2) || (a.move == -2)) {
+	  	state.position = -999;
+	  }
 	}
 
-	void reset() {//override {
+	void reset() {
 		state.position = 2;
 	}
 
-	bool isTerminal() {//override {
+	bool isTerminal() {
 		int position = state.position;
-		if (position == 0) {
+		if (state.position == -999 || position == 0) {
 			return true;
 		}
 		return false;
