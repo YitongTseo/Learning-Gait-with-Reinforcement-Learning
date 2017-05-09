@@ -1,0 +1,24 @@
+<?xml version="1.0"?> 
+<sdf version="1.4">
+  <world name="six_legs_world">
+
+    <!-- Ground Plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <model name="stompy">
+      <include>
+          <static>false</static>
+          <!-- <uri>model://pioneer2dx</uri> -->
+          <uri>model://simplesix</uri>
+      </include>
+
+      <plugin name="move_legs" filename="libmove_legs.so"/>
+    </model>
+  </world>
+</sdf>

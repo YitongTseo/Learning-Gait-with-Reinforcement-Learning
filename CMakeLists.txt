@@ -17,11 +17,12 @@ add_library(animated_box SHARED animated_box.cc)
 target_link_libraries(animated_box ${GAZEBO_LIBRARIES})
 
 add_library(turn_wheels SHARED turn_wheels.cc)
-target_link_libraries(turn_wheels ${GAZEBO_LIBRARIES})# ${Boost_LIBRARIES})
+target_link_libraries(turn_wheels ${GAZEBO_LIBRARIES})# ${Boost_LIBRARIES}
+
+add_library(move_legs SHARED move_legs.cc)
+target_link_libraries(move_legs ${GAZEBO_LIBRARIES}) # ${Boost_LIBRARIES}) 
+#Maybe if can't link the turnWheels library we have to comment out ${Boost_LIBRARIES})
 
 add_executable(integrated_main integrated_main.cc)
 target_link_libraries(integrated_main ${GAZEBO_LIBRARIES} pthread)
 
-
-# add_executable(independent_listener independent_listener.cc)
-# target_link_libraries(independent_listener ${GAZEBO_LIBRARIES} pthread)

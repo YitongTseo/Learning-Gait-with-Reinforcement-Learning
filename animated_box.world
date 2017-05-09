@@ -19,6 +19,7 @@
 
       <!-- <plugin name="animated_box2" filename="libanimated_box2.so"/> -->
       <plugin name="turn_wheels" filename="libturn_wheels.so"/>
+      <!-- <plugin name="move_legs" filename="libmove_legs.so"/> -->
     </model>
   </world>
 </sdf>
