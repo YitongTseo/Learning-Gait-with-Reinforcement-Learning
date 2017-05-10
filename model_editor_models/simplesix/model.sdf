@@ -2,10 +2,12 @@
 <sdf version='1.4'>
   <model name="simplesix">
     <static>false</static>
+    <self_collide>1</self_collide>
       <link name='body'>
         <pose>0 0 1.31 0 0 0</pose>
         <inertial>
-          <mass>100</mass>
+          <mass>20</mass>
+<!--           <cog>0 0 -.25</cog> -->
         </inertial>
         <collision name='collision'>
           <pose frame=''>0 0 0 0 0 0</pose>
@@ -36,7 +38,10 @@
         <child>fl_leg::hip</child>
         <parent>body</parent>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <!-- <friction>.5</friction> -->
+          </dynamics>
         </axis>
       </joint>
 
@@ -50,7 +55,10 @@
         <child>fr_leg::hip</child>
         <parent>body</parent>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <!-- <friction>.5</friction> -->
+          </dynamics>
         </axis>
       </joint>
 
@@ -64,7 +72,10 @@
         <child>ml_leg::hip</child>
         <parent>body</parent>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <!-- <friction>.5</friction> -->
+          </dynamics>
         </axis>
       </joint>
 
@@ -78,7 +89,10 @@
         <child>mr_leg::hip</child>
         <parent>body</parent>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <!-- <friction>.5</friction> -->
+          </dynamics>
         </axis>
       </joint>
 
@@ -92,7 +106,10 @@
         <child>rl_leg::hip</child>
         <parent>body</parent>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <!-- <friction>.5</friction> -->
+          </dynamics>
         </axis>
       </joint>
 
@@ -106,7 +123,10 @@
         <child>rr_leg::hip</child>
         <parent>body</parent>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <!-- <friction>.5</friction> -->
+          </dynamics>
         </axis>
       </joint>
       <self_collide>1</self_collide>

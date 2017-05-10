@@ -14,7 +14,7 @@
     <model name="stompy">
       <include>
           <static>false</static>
-          <!-- <uri>model://pioneer2dx</uri> -->
+          <!-- <static>true</static> -->
           <uri>model://simplesix</uri>
       </include>
 

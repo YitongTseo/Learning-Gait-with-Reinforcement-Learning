@@ -26,10 +26,6 @@
 
 namespace gazebo
 {
-  enum {
-    RIGHT,
-    LEFT,
-  };
 
   class MoveLegs : public ModelPlugin
   {
@@ -47,6 +43,17 @@ namespace gazebo
       ql = qLearningAgent(we);
       std::cout<<"3\n";
 
+      for (int i = 0; i < this->jointsVector.size(); ++i) {
+        physics::JointPtr joint = this->jointsVector.at(i);
+        cout << i << " joint Name: " << joint->GetName() << endl;
+        cout << joint->GetAngle(0) << endl;
+      }
+
+      
+
+      //cout << "\nGETANGLE " << this->jointsVector.at(2)->GetRelativeLinearVel(0) << endl; //Debug
+      // this->jointsVector.at(1)->SetPosition(0, 1);
+
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
           boost::bind(&MoveLegs::OnUpdate, this, _1));
@@ -57,11 +64,18 @@ namespace gazebo
   public: void OnUpdate(const common::UpdateInfo & /*_info*/)
   {
 
-    cout << "\nplease work ";
-    for (int i = 0; i < this->jointsVector.size(); ++i) {
-      physics::JointPtr joint = this->jointsVector.at(i);
-      cout << "joint Name: " << joint->GetName();
-    }
+    this->jointsVector.at(0)->SetForce(0, 10.15f);
+    this->jointsVector.at(1)->SetForce(0, 10.15f);
+    this->jointsVector.at(3)->SetForce(0, 10.15f);
+    this->jointsVector.at(4)->SetForce(0, 10.15f);
+    // for (int i = 0; i < this->jointsVector.size(); ++i) {
+    //   physics::JointPtr joint = this->jointsVector.at(i);
+    //   cout << "joint Name: " << joint->GetName();
+    // }
+
+
+    // this->jointsVector.at(0)->SetPosition(0, 2);
+    // this->jointsVector.at(1)->SetPosition(0, 1);
     
     // Apply a small linear velocity to the model.
     // this->model->SetLinearVel(math::Vector3(0.06, 0, 0));

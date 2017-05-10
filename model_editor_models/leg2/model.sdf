@@ -4,7 +4,7 @@
     <link name='r_calf'>
       <pose frame=''>0 0 0.2 0 0 0</pose>
       <inertial>
-        <mass>10</mass>
+        <mass>.25</mass>
       </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
@@ -31,7 +31,7 @@
     <link name='r_thigh_lift'>
       <pose frame=''>0 0 0.7 0 0 0</pose>
       <inertial>
-        <mass>8</mass>
+        <mass>.54</mass>
       </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
@@ -59,7 +59,7 @@
     <link name='hip'>
       <pose frame=''>0 0 1.06 0 0 0</pose>
       <inertial>
-        <mass>1</mass>
+        <!-- <mass>1</mass> -->
       </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
@@ -93,7 +93,7 @@
           <upper>1.5708</upper>
         </limit>
         <dynamics>
-          <friction>0.8</friction>
+          <!-- <friction>0.8</friction> -->
         </dynamics>
       </axis>
     </joint>
@@ -110,7 +110,7 @@
           <upper>1.5708</upper>
         </limit>
         <dynamics>
-          <friction>.5</friction>
+          <!-- <friction>.5</friction> -->
         </dynamics>
       </axis>
     </joint>
