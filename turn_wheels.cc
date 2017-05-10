@@ -17,6 +17,7 @@
 #include <boost/bind.hpp>
 #include <gazebo/gazebo.hh>
 #include <ignition/math.hh>
+#include "reinforcementLearning/wheeledRobotEnvironment2.h"
 #include "reinforcementLearning/qLearning.cpp"
 #include <gazebo/physics/physics.hh>
 #include <gazebo/common/common.hh>

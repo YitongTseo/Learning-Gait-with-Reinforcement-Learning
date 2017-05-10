@@ -17,6 +17,7 @@
 #include <boost/bind.hpp>
 #include <gazebo/gazebo.hh>
 #include <ignition/math.hh>
+#include "reinforcementLearning/sixLeggedForceEnvironment.h"
 #include "reinforcementLearning/qLearning.cpp"
 #include <gazebo/physics/physics.hh>
 #include <gazebo/common/common.hh>
@@ -38,21 +39,14 @@ namespace gazebo
       this->jointsVector = this->model->GetJoints();
 
       std::cout<<"\n1";
-      we = WheelsEnvironment();
+      we = SixLegsForceEnvironment();
       std::cout<<"2";
       ql = qLearningAgent(we);
       std::cout<<"3\n";
 
-      for (int i = 0; i < this->jointsVector.size(); ++i) {
-        physics::JointPtr joint = this->jointsVector.at(i);
-        cout << i << " joint Name: " << joint->GetName() << endl;
-        cout << joint->GetAngle(0) << endl;
-      }
+      jointCount = 0;
+      count = 0;
 
-      
-
-      //cout << "\nGETANGLE " << this->jointsVector.at(2)->GetRelativeLinearVel(0) << endl; //Debug
-      // this->jointsVector.at(1)->SetPosition(0, 1);
 
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
@@ -63,88 +57,110 @@ namespace gazebo
   // Called by the world update start event
   public: void OnUpdate(const common::UpdateInfo & /*_info*/)
   {
-
-    this->jointsVector.at(0)->SetForce(0, 10.15f);
-    this->jointsVector.at(1)->SetForce(0, 10.15f);
-    this->jointsVector.at(3)->SetForce(0, 10.15f);
-    this->jointsVector.at(4)->SetForce(0, 10.15f);
-    // for (int i = 0; i < this->jointsVector.size(); ++i) {
-    //   physics::JointPtr joint = this->jointsVector.at(i);
-    //   cout << "joint Name: " << joint->GetName();
-    // }
+    //count helps us skip time steps (100 at a time currently)
+    count++;
+    if (count < 1000) {
+      return;
+    }
+    count = 0;
 
 
-    // this->jointsVector.at(0)->SetPosition(0, 2);
-    // this->jointsVector.at(1)->SetPosition(0, 1);
+    State oldState(this->we.getCurrentState());
+    float legForce = this->jointsVector.at(jointCount)->GetForce(0);
+
+    cout << "\njoint index: " << jointCount;
+    cout << "\nleg force: " << legForce;
+
+
+    this->we.setJointIndexLegForce(jointCount, legForce);
+    Action action = this->ql.getAction();
+
+    cout << "action: jointIndex: " << action.jointIndex << "  increment: " << action.increment;
+
+
+    //move the actual joints in Gazebo
+    physics::JointPtr leftJoint = this->jointsVector[action.jointIndex];
+    float newLegForce = legForce + action.increment * we.jointForceIncrement;
+    leftJoint->SetForce(0, newLegForce);
+
+    physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
+    rightJoint->SetForce(0, newLegForce);
+
+
+
+    //gotta feed the state the current positions
+    std::vector<float> positions;
+    for (int i = 0; i < this->jointsVector.size(); ++i) {
+      float jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
+      positions.push_back(jointAngle);
+    }
+    we.setRobotPosition(positions);
+
+
+    State nextState = this->we.getCurrentState();
+   
+
+
+    math::Vector3 relativeVelocity = this->model->GetRelativeLinearVel();
+    math::Pose relativePose = this->model->GetRelativePose();
+    math::Vector3 relativeRotation = relativePose.rot.GetAsEuler();
+    math::Vector3 relativePosition = relativePose.pos;
+
+    std::cout << "\nrelative POSITION: x: " << relativePosition.x << " y: " 
+      << relativePosition.y << " z: " << relativePosition.z;
+
+    std::cout << "\n         relative VELOCITY: x: " << relativeVelocity.x << " y: " 
+      << relativeVelocity.y << " z: " << relativeVelocity.z;
+
+    std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
+
+   
+    //the greater the velocity the better.
+    float reward = relativePosition.x * 10;
+
+    //we want to punish high roll.
+    reward += std::abs(relativeRotation.x) * 5;
     
-    // Apply a small linear velocity to the model.
-    // this->model->SetLinearVel(math::Vector3(0.06, 0, 0));
+    cout << "\nreward " << reward;
 
-    //     if (this->we.isTerminal(relativePosition.x, relativePosition.z)){
-    //   this->we.reset();
-    //   this->model.reset();//TODO!: teleport the model back to original position
-    // }
-
-    // physics::JointPtr leftJoint = this->jointsVector[0];
-    // physics::JointPtr rightJoint = this->jointsVector[1];
-
-
-    // State oldState(this->we.getCurrentState());
-    // Action action = this->ql.getAction();
-
-    // cout << "\nleft wheel velocity " << oldState.leftWheelVelocity;
-    // cout << "\nleft wheel increment " << action.leftIncrement;
-
-    // cout << "\nright wheel velocity " << oldState.leftWheelVelocity;
-    // cout << "\nright wheel increment " << action.leftIncrement;
+    //Relative rotation comes in the form: RPY, so to put it in the right order...
+    this->we.setRobotOrientationYPR(relativeRotation.z, relativeRotation.y, relativeRotation.x);
     
-    // cout << "\n size of bucket" << we.wheelBuckets.size();
+    //then call update Beliefs with those arguments.
+    this->ql.updateBeliefs(oldState, action, nextState, reward);
 
-    // //find the reward
-    // float reward = this->we.getReward(oldState, action);
-
-    // cout << "\nreward " << reward;
-
-    // //update the environment
-    // this->we.doAction(action);
-    // cout << "\nleft wheel velocity " << oldState.leftWheelVelocity;
+    if (this->we.isTerminal()){
+      //then call update Beliefs with those arguments.
+      float terribleReward = -1000.0f;
+      this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
+      this->we.reset(); //reset environment so q learning can learn the correct beliefs
 
 
-    // // leftJoint->SetVelocity(0, .7);
-    // State nextState = this->we.getCurrentState();
-    // //move the actual joints in Gazebo
-    // leftJoint->SetVelocity(0, nextState.leftWheelVelocity);
-    // rightJoint->SetVelocity(0, nextState.rightWheelVelocity);
+      this->model->Reset();//teleport the model back to original position
 
+      //reset links and joints
+      for (int i = 0; i < 18; ++i) {
+        this->jointsVector.at(i)->Reset();
+      }
+      std::vector<physics::LinkPtr> links = this->model->GetLinks();
+      for (int i = 0; i < links.size(); ++i) {
+        links.at(i)->Reset();
+      }
+    }
 
-
-
-    // math::Vector3 relativeVelocity = this->model->GetRelativeLinearVel();
-    // math::Pose relativePose = this->model->GetRelativePose();
-    // math::Vector3 relativeRotation = relativePose.rot.GetAsEuler();
-    // math::Vector3 relativePosition = relativePose.pos;
-
-    // std::cout << "\nrelative POSITION: x: " << relativePosition.x << " y: " 
-    //   << relativePosition.y << " z: " << relativePosition.z;
-
-    // std::cout << "\n         relative VELOCITY: x: " << relativeVelocity.x << " y: " 
-    //   << relativeVelocity.y << " z: " << relativeVelocity.z;
-
-    // std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
-
-    // std::cout << "\n robotOrientation" << nextState.robotOrientation << endl;
-
-    // //learn to move forward in the x direction
-    // this->we.setRobotReward(relativePosition.x - abs(relativePosition.y));
-    // this->we.setRobotOrientation(relativeRotation.z);
-    
-    // //then call update Beliefs with those arguments.
-    // this->ql.updateBeliefs(oldState, action, nextState, reward);
-
+    //increment the jointCount.
+    //Right now we're skipping everything but the knee joints.
+    //jointCount = (jointCount + 3) % 18;
+    jointCount = (jointCount + 6) % 18;
   }
 
-  private: WheelsEnvironment we;
+  private: SixLegsForceEnvironment we;
   private: qLearningAgent ql;
+
+  //this is going to alwasy be between 0 - 17, controls which joint we're interested in.
+  private: int jointCount;
+  //this will be between 0 and some number.
+  private: int count;
 
     // Pointer to the model
   private: physics::ModelPtr model;

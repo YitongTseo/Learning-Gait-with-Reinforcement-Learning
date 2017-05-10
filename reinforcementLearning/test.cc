@@ -49,7 +49,15 @@ int main() {
 
   std::cout << "\n yaw: " << newestState.roboOrientation[0] << "  pitch: " << newestState.roboOrientation[1] <<  "roll: " << newestState.roboOrientation[2];
 
+  qLearningAgent ql(sle);
 
+  //print out of the beliefDict. for debugging purposes only.
+  // for(auto kv : ql.beliefDict) {
+  //   StateAction sa = kv.first;
+  //   float value = kv.second;
+  //   std::cout << "state: " << sa.state.position << " action: " << sa.action.move;
+  //   std::cout << " BELIEF:  " << value << "\n";
+  // }
 
   // State newState(sle.getCurrentState());
 

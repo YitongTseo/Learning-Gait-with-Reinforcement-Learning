@@ -14,7 +14,6 @@
     <model name="stompy">
       <include>
           <static>false</static>
-          <!-- <static>true</static> -->
           <uri>model://simplesix</uri>
       </include>
 

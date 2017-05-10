@@ -13,9 +13,9 @@ public:
 	std::vector<float> jointVel; //18 robot joint velocities. 3 per leg. (elbow, shoulder, hip)
 	std::vector<float> roboOrientation; //Yaw, pitch, roll
 	//We will restrict the state space in practice by never visiting some, (i.e. fixing fewer paramters that control all of these)
-	const float FIXEDHIPPOS;
+	
 
-	State(): FIXEDHIPPOS(0.0f){
+	State(){
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
@@ -55,13 +55,13 @@ public:
 
 			if( i % 3 == 2){
 				//the hip joints are: 2, 5, 8, 11, 14, 17
-				jointPos.at(i) = FIXEDHIPPOS;
+				jointPos.at(i) = 0.0f;
 			}
 			else if (i % 3 == 0) {
 				//For now we can only control the knees
 				jointPos.at(i) = positions.at(i);
 			} else {
-				jointPos.at(i) = FIXEDHIPPOS;
+				jointPos.at(i) = 0.0f;
 			}
 		}
 	}
@@ -186,6 +186,9 @@ protected:
 	float maxJointForce, minJointForce;
 	std::vector<float> jointExtensionBuckets;
 
+	int jointIndex;
+	float legForce;
+
 public:
 	
 	float jointForceIncrement;
@@ -197,14 +200,16 @@ public:
 
 
 	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(float maxExt = 1.57f, float minExt = -1.57f, float minForce = -0.3f, float maxForce = 0.3f, int nbExt = 9, int nbForce = 9) :
+	SixLegsForceEnvironment(float maxExt = 1.57f, float minExt = -1.57f, float minForce = -10000.0f, float maxForce = 10000.0f, int nbExt = 9, int nbForce = 15) :
 																								 state(),
 																								 maxJointExtension(maxExt),
 																								 minJointExtension(minExt),
 																								 maxJointForce(maxForce),
 																								 minJointForce(minForce),
 																								 numExtensionBuckets(nbExt),
-																								 numForceBuckets(nbForce) {
+																								 numForceBuckets(nbForce),
+																								 jointIndex(0),
+																							     legForce(0.0f){
 
 
  	const float jointExtensionIncrement = (maxJointExtension - minJointExtension) / (float(numExtensionBuckets) - 1);
@@ -294,15 +299,21 @@ public:
 		state.updateJoints(bucketedPositions);
 	}
 
-	virtual std::vector<Action> getPossibleActions(int jointIndex, float legForce) {
+	void setJointIndexLegForce(int ji, float lf) {
+		jointIndex = ji;
+		legForce = lf;
+	}
+
+	//BE SURE TO SET JOINT INDEX and LEG FORCE before calling this method!!!!!
+	virtual std::vector<Action> getPossibleActions() {
 		std::vector<Action> actions;
+		//add the trivial action
+		actions.push_back(Action(0, jointIndex));
 
 		if (jointIndex % 3 != 0) {
 			std::cout << "ooo, u just passed a non-knee joint. don't wanna do that.";
 			return actions;
 		}
-		//add the trivial action
-		actions.push_back(Action(0, jointIndex));
 
 		//REMEMBER: jointForceIncrement is the increment factor
 		//don't add force if the leg is already fully extended or if max force is applied already.
