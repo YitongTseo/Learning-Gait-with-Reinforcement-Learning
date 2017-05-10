@@ -41,12 +41,15 @@ namespace gazebo
       std::cout<<"\n1";
       we = SixLegsForceEnvironment();
       std::cout<<"2";
-      ql = qLearningAgent(we);
+
+      float alpha = 0.9f; 
+      float gamma = 0.1f;
+      float epsilon = 0.3f;
+      ql = qLearningAgent(we, alpha, gamma, epsilon);
       std::cout<<"3\n";
 
       jointCount = 0;
       count = 0;
-
 
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
@@ -83,8 +86,9 @@ namespace gazebo
     float newLegForce = legForce + action.increment * we.jointForceIncrement;
     leftJoint->SetForce(0, newLegForce);
 
-    physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
-    rightJoint->SetForce(0, newLegForce);
+    //TODO: maybe treat 2 legs the same?
+    // physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
+    // rightJoint->SetForce(0, newLegForce);
 
 
 
@@ -116,10 +120,12 @@ namespace gazebo
 
    
     //the greater the velocity the better.
-    float reward = relativePosition.x * 10;
+    float reward = relativePosition.x * 2;
 
-    //we want to punish high roll.
-    reward += std::abs(relativeRotation.x) * 5;
+    //we want to punish high roll. maybe roll above a threshold? let's say 0.5
+    if (std::abs(relativeRotation.x) > 0.5) {
+      reward -= std::abs(relativeRotation.x);
+    }
     
     cout << "\nreward " << reward;
 
@@ -129,7 +135,21 @@ namespace gazebo
     //then call update Beliefs with those arguments.
     this->ql.updateBeliefs(oldState, action, nextState, reward);
 
-    if (this->we.isTerminal()){
+    //if the last 5 states have been the same then we should probably restart so our robo doesn't get into a rut.
+    bool last5StatesAreSame = false;
+    //if we have 5 states stored then check if they are all equal.
+    if (last5States.size() >= 5) {
+      last5StatesAreSame = true;
+      for (int i = 1; i < last5States.size(); ++i) {
+        if (last5States.at(i - 1) != last5States.at(i)) {
+          last5StatesAreSame = false;
+          break;
+        }
+      }
+    }
+
+    //should we restart?
+    if (this->we.isTerminal() || last5StatesAreSame){
       //then call update Beliefs with those arguments.
       float terribleReward = -1000.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
@@ -148,10 +168,14 @@ namespace gazebo
       }
     }
 
+    if (last5States.size() >= 5) {
+      last5States.erase(last5States.begin()); //pop off the front (oldest state)
+    }
+    last5States.push_back(nextState);
+    
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    //jointCount = (jointCount + 3) % 18;
-    jointCount = (jointCount + 6) % 18;
+    jointCount = (jointCount + 3) % 18;
   }
 
   private: SixLegsForceEnvironment we;
@@ -161,6 +185,7 @@ namespace gazebo
   private: int jointCount;
   //this will be between 0 and some number.
   private: int count;
+  private: std::vector<State> last5States;
 
     // Pointer to the model
   private: physics::ModelPtr model;

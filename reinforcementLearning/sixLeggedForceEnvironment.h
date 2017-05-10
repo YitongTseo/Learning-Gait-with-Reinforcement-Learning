@@ -78,6 +78,20 @@ public:
 		roboOrientation[2] = roll;
 	}
 
+	bool operator!=(const State &other) const {
+		for(int i = 0; i < other.jointPos.size(); ++i){
+			if (jointPos[i] != other.jointPos[i]) {
+				return true;
+			}
+			// if (state.jointVel[i] != other.state.jointVel[i]) {
+			// 	return false;
+			// }
+		}
+		return (roboOrientation[0] != other.roboOrientation[0] ||
+			    roboOrientation[1] != other.roboOrientation[1] ||
+			    roboOrientation[2] != other.roboOrientation[2]);
+	 }
+
 	~State() {}
 };
 
