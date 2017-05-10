@@ -14,16 +14,16 @@ To run create a build folder following the instructions here: http://gazebosim.o
 for me at least gazebo is stored at:
 /usr/local/share/gazebo-8/
 
-#### if gazebo isn’t starting.
+**if gazebo isn’t starting.**
 type gazebo —verbose
 
-#### if you find something like: Error [RTShaderSystem.cc:408] Unable to find shader lib.
+**if you find something like: Error [RTShaderSystem.cc:408] Unable to find shader lib.**
 export GAZEBO_RESOURCE_PATH=/usr/local/share/gazebo-8:/usr/local/share/gazebo_models:${GAZEBO_RESOURCE_PATH}
 ^but before doing that unset the GAZEBO_RESOURCE_PATH
 
 
 
-#### when plugins don’t work first check what the path is set to.
+**when plugins don’t work first check what the path is set to.**
 echo $GAZEBO_PLUGIN_PATH
 
 To unset the path if its a mess
@@ -36,7 +36,7 @@ instead, you probably want to use this. (INSIDE THE /build folder!!!!!!)
 export GAZEBO_PLUGIN_PATH=$PWD
 
 
-#### if it can’t find the model:
+**if it can’t find the model:**
 it’s probably a problem with
 GAZEBO_MODEL_PATH
 http://answers.gazebosim.org/question/177/gazebo-default-directory-and-can-not-insert-model/
