@@ -99,9 +99,9 @@ class Action {
 public:
 	//Actions will apply force equal to increment * state.jointForceIncrement to the joint corresponding to jointIndex
 	int jointIndex;
-	float increment;
+	float force;
 
-	Action(float l, int ji): increment(l), jointIndex(ji) {}
+	Action(float l, int ji): force(l), jointIndex(ji) {}
 
 	~Action() {}
 };
@@ -126,7 +126,7 @@ public:
 		return (state.roboOrientation[0] == other.state.roboOrientation[0] &&
 				    state.roboOrientation[1] == other.state.roboOrientation[1] &&
 				    state.roboOrientation[2] == other.state.roboOrientation[2] &&
-	          other.action.increment == action.increment &&
+	          other.action.force == action.force &&
 	          other.action.jointIndex == action.jointIndex);
 	 }
 
@@ -155,15 +155,12 @@ struct hash<StateAction>
 				h = h ^ (hash<float>()(sa.state.jointPos[i]) << i);
 			}
 
-			// for(int i = 0; i < size; ++i) {
-			// 	h = h ^ (hash<float>()(sa.state.jointVel[i]) << (i + size));
-			// }
 
       //note I have no idea if this is a good hash function. Sorry in advance. -Yitong
       return ((hash<float>()(sa.state.roboOrientation[0])
                ^ (hash<float>()(sa.state.roboOrientation[1]) << 1)) >> 1)
-      		     ^ ((hash<float>()(sa.state.roboOrientation[2]) << 5) >> 2)
-      		     ^ ((hash<float>()(sa.action.increment) << 3))
+  		       ^ ((hash<float>()(sa.state.roboOrientation[2]) << 5) >> 2)
+  		       ^ ((hash<float>()(sa.action.force) << 3))
                ^ (hash<int>()(sa.action.jointIndex) << 1)
                ^ h;
     }
@@ -215,7 +212,7 @@ public:
 
 
 	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -10000.0f, float maxForce = 10000.0f, int nbExt = 9, int nbForce = 15) :
+	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -7500.0f, float maxForce = 7500.0f, int nbExt = 9, int nbForce = 7) :
 																								 state(numJoints),
 																								 maxJointExtension(maxExt),
 																								 minJointExtension(minExt),

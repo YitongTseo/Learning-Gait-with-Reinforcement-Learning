@@ -42,8 +42,8 @@ namespace gazebo
       we = SixLegsForceEnvironment();
       std::cout<<"2";
 
-      float alpha = 0.9f; 
-      float gamma = 0.1f;
+      float alpha = 0.1f; 
+      float gamma = 0.9f;
       float epsilon = 0.2f;
       ql = qLearningAgent(we, alpha, gamma, epsilon);
       std::cout<<"3\n";
@@ -78,15 +78,15 @@ namespace gazebo
     this->we.setJointIndexLegForce(jointCount, legForce);
     Action action = this->ql.getAction();
 
-    cout << "action: jointIndex: " << action.jointIndex << "  increment: " << action.increment;
+    cout << "action: jointIndex: " << action.jointIndex << "  force: " << action.force;
 
 
     //move the actual joints in Gazebo
     physics::JointPtr leftJoint = this->jointsVector[action.jointIndex];
-    float newLegForce = action.increment;
+    float newLegForce = action.force;
     leftJoint->SetForce(0, newLegForce);
 
-    //TODO: maybe treat 2 legs the same?
+    // //HERE WE'RE MOVING THE FRONT LEFT AND BACK RIGHT
     // physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
     // rightJoint->SetForce(0, newLegForce);
 
@@ -114,11 +114,14 @@ namespace gazebo
     std::cout << "\n         relative VELOCITY: x: " << relativeVelocity.x << " y: " 
       << relativeVelocity.y << " z: " << relativeVelocity.z;
 
-    std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
+    std::cout << "\n         roll: " << relativeRotation.x << " pitch: " 
+      << relativeRotation.y << " yaw: " << relativeRotation.z;
+
+    //std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
 
    
     //the greater the velocity the better.
-    float reward = (relativeVelocity.x + relativePosition.x)* 2;
+    float reward = (relativeVelocity.x)* 100;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     if (std::abs(relativeRotation.x) > 0.5) {
@@ -136,7 +139,7 @@ namespace gazebo
     //if the last 5 states have been the same then we should probably restart so our robo doesn't get into a rut.
     bool last5StatesAreSame = false;
     //if we have 5 states stored then check if they are all equal.
-    if (last5States.size() >= 5) {
+    if (last5States.size() >= 3) {
       last5StatesAreSame = true;
       for (int i = 1; i < last5States.size(); ++i) {
         if (last5States.at(i - 1) != last5States.at(i)) {
@@ -149,7 +152,7 @@ namespace gazebo
     //should we restart?
     if (this->we.isTerminal() || last5StatesAreSame){
       //then call update Beliefs with those arguments.
-      float terribleReward = -10.0f;
+      float terribleReward = -2.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
       this->we.reset(); //reset environment so q learning can learn the correct beliefs
 
@@ -166,7 +169,7 @@ namespace gazebo
       }
     }
 
-    if (last5States.size() >= 5) {
+    if (last5States.size() >= 3) {
       last5States.erase(last5States.begin()); //pop off the front (oldest state)
     }
     last5States.push_back(nextState);
