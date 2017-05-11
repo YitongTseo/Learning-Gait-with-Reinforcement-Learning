@@ -68,7 +68,7 @@ namespace gazebo
   {
     //count helps us skip time steps (100 at a time currently)
     count++;
-    if (count < 100) {
+    if (count < 500) {
       return;
     }
     count = 0;
@@ -158,7 +158,7 @@ namespace gazebo
     //if the last 5 states have been the same then we should probably restart so our robo doesn't get into a rut.
     bool last5StatesAreSame = false;
     //if we have 5 states stored then check if they are all equal.
-    if (last5States.size() >= 3) {
+    if (last5States.size() >= 6) {
       last5StatesAreSame = true;
       for (int i = 1; i < last5States.size(); ++i) {
         if (last5States.at(i - 1) != last5States.at(i)) {
@@ -188,7 +188,7 @@ namespace gazebo
       }
     }
 
-    if (last5States.size() >= 3) {
+    if (last5States.size() >= 6) {
       last5States.erase(last5States.begin()); //pop off the front (oldest state)
     }
     last5States.push_back(nextState);

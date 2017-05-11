@@ -213,7 +213,7 @@ public:
 
 
 	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(int numJoints = 8, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -25000.0f, float maxForce = 25000.0f, int nbExt = 9, int nbForce = 11) :
+	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -25000.0f, float maxForce = 25000.0f, int nbExt = 9, int nbForce = 11) :
 																								 state(numJoints),
 																								 maxJointExtension(maxExt),
 																								 minJointExtension(minExt),
@@ -351,7 +351,7 @@ public:
 		float pitch = state.roboOrientation[1];
 		float roll = state.roboOrientation[2];
 
-		if (std::abs(roll) > 1 || std::abs(pitch) > 1){ //Ashes, ashes, we all fall down...
+		if (std::abs(roll) > 2 || std::abs(pitch) > 2){ //Ashes, ashes, we all fall down...
 			return true;
 		}
 		return false;
