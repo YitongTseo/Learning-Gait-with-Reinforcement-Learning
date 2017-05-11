@@ -52,17 +52,18 @@ public:
 
 	void updateJoints(std::vector<float> positions) {
 		for(int i = 0; i< numJoints; ++i ){
+			jointPos.at(i) = positions.at(i);
 
-			if( i % 3 == 2){
-				//the hip joints are: 2, 5, 8, 11, 14, 17
-				jointPos.at(i) = 0.0f;
-			}
-			else if (i % 3 == 0) {
-				//For now we can only control the knees
-				jointPos.at(i) = positions.at(i);
-			} else {
-				jointPos.at(i) = 0.0f;
-			}
+			// if( i % 3 == 2){
+			// 	//the hip joints are: 2, 5, 8, 11, 14, 17
+			// 	jointPos.at(i) = 0.0f;
+			// }
+			// else if (i % 3 == 0) {
+			// 	//For now we can only control the knees
+			// 	jointPos.at(i) = positions.at(i);
+			// } else {
+			// 	jointPos.at(i) = 0.0f;
+			// }
 		}
 	}
 
@@ -212,7 +213,7 @@ public:
 
 
 	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -7500.0f, float maxForce = 7500.0f, int nbExt = 9, int nbForce = 7) :
+	SixLegsForceEnvironment(int numJoints = 8, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -25000.0f, float maxForce = 25000.0f, int nbExt = 9, int nbForce = 11) :
 																								 state(numJoints),
 																								 maxJointExtension(maxExt),
 																								 minJointExtension(minExt),
@@ -275,11 +276,13 @@ public:
 
 		for(int i = 0; i< state.numJoints; ++i ){
 
-			if( i % 3 == 2){
-				//the hip joints are: 2, 5, 8, 11, 14, 17
-				bucketedPositions.push_back(0.0f);
-			}
-			else if (i % 3 == 0) {
+			// if( i % 3 == 2){
+			// 	//the hip joints are: 2, 5, 8, 11, 14, 17
+			// 	bucketedPositions.push_back(0.0f);
+			// }
+			// else if (i % 3 == 0) {
+
+
 				//For now we can only control the knees
 				//of all the buckets which one is closest to positions.at(i)
 
@@ -300,9 +303,9 @@ public:
 				}
 				bucketedPositions.push_back(closestFloat);
 
-			} else {
-				bucketedPositions.push_back(0.0f);
-			}
+			// } else {
+			// 	bucketedPositions.push_back(0.0f);
+			// }
 		}
 
 		for (int i = 0; i < state.numJoints; ++i) {
@@ -319,10 +322,11 @@ public:
 	//BE SURE TO SET JOINT INDEX and LEG FORCE before calling this method!!!!!
 	virtual std::vector<Action> getPossibleActions() {
 		std::vector<Action> actions;
-		if (jointIndex % 3 != 0) {
-			std::cout << "ooo, u just passed a non-knee joint. don't wanna do that.";
-			return actions;
-		}
+
+		// if (jointIndex % 2 == 0) {
+		// 	std::cout << "ooo, u just passed a knee joint. don't wanna do that.";
+		// 	return actions;
+		// }
 
 		for (int i = 0; i < forceBuckets.size(); ++i) {
 			actions.push_back(Action(forceBuckets.at(i), jointIndex));

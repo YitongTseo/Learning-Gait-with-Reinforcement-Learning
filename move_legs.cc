@@ -48,7 +48,13 @@ namespace gazebo
       ql = qLearningAgent(we, alpha, gamma, epsilon);
       std::cout<<"3\n";
 
-      jointCount = 0;
+      std::cout << "\nnumJoints: " << this->jointsVector.size();
+      for (int i = 0; i < this->jointsVector.size(); ++i) {
+        std::cout << "\n" << i << " joint name: " << this->jointsVector.at(i)->GetName();
+      }
+
+
+      jointCount = 1;
       count = 0;
 
       //set the method OnUpdate() as a listener. It'll be called every time step.
@@ -62,7 +68,7 @@ namespace gazebo
   {
     //count helps us skip time steps (100 at a time currently)
     count++;
-    if (count < 1000) {
+    if (count < 100) {
       return;
     }
     count = 0;
@@ -74,17 +80,30 @@ namespace gazebo
     cout << "\njoint index: " << jointCount;
     cout << "\nleg force: " << legForce;
 
-
     this->we.setJointIndexLegForce(jointCount, legForce);
+    // if (action.jointIndex % 2 == 0) {
+    //   //dealing with the knee joints
+    //   newLegForce *= knee_Vs_HipForceDifference;
+    // }
+
+
     Action action = this->ql.getAction();
 
     cout << "action: jointIndex: " << action.jointIndex << "  force: " << action.force;
 
 
     //move the actual joints in Gazebo
-    physics::JointPtr leftJoint = this->jointsVector[action.jointIndex];
+    physics::JointPtr hipJoint = this->jointsVector[action.jointIndex];
     float newLegForce = action.force;
-    leftJoint->SetForce(0, newLegForce);
+    hipJoint->SetForce(0, newLegForce);
+
+
+    // float knee_Vs_HipForceDifference = 10.0f;
+
+    //set the knee joint to follow.
+    // physics::JointPtr kneeJoint = this->jointsVector.at(action.jointIndex - 1);
+    // kneeJoint->SetForce(0, newLegForce); // / knee_Vs_HipForceDifference);
+
 
     // //HERE WE'RE MOVING THE FRONT LEFT AND BACK RIGHT
     // physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
@@ -176,7 +195,7 @@ namespace gazebo
     
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 3) % this->jointsVector.size();
+    jointCount = (jointCount + 1) % this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;
