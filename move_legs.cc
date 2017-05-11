@@ -83,14 +83,12 @@ namespace gazebo
 
     //move the actual joints in Gazebo
     physics::JointPtr leftJoint = this->jointsVector[action.jointIndex];
-    float newLegForce = legForce + action.increment * we.jointForceIncrement;
+    float newLegForce = action.increment;
     leftJoint->SetForce(0, newLegForce);
 
     //TODO: maybe treat 2 legs the same?
-    physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
-    rightJoint->SetForce(0, newLegForce);
-
-
+    // physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
+    // rightJoint->SetForce(0, newLegForce);
 
     //gotta feed the state the current positions
     std::vector<float> positions;
@@ -120,7 +118,7 @@ namespace gazebo
 
    
     //the greater the velocity the better.
-    float reward = relativeVelocity.x * 2;
+    float reward = (relativeVelocity.x + relativePosition.x)* 2;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     if (std::abs(relativeRotation.x) > 0.5) {
@@ -175,7 +173,7 @@ namespace gazebo
     
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 6) % this->jointsVector.size();
+    jointCount = (jointCount + 3) % this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;

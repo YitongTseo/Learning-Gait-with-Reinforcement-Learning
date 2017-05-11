@@ -98,9 +98,10 @@ public:
 class Action {
 public:
 	//Actions will apply force equal to increment * state.jointForceIncrement to the joint corresponding to jointIndex
-	int increment, jointIndex;
+	int jointIndex;
+	float increment;
 
-	Action(int l, int ji): increment(l), jointIndex(ji) {}
+	Action(float l, int ji): increment(l), jointIndex(ji) {}
 
 	~Action() {}
 };
@@ -162,7 +163,7 @@ struct hash<StateAction>
       return ((hash<float>()(sa.state.roboOrientation[0])
                ^ (hash<float>()(sa.state.roboOrientation[1]) << 1)) >> 1)
       		     ^ ((hash<float>()(sa.state.roboOrientation[2]) << 5) >> 2)
-      		     ^ ((hash<int>()(sa.action.increment) << 3))
+      		     ^ ((hash<float>()(sa.action.increment) << 3))
                ^ (hash<int>()(sa.action.jointIndex) << 1)
                ^ h;
     }
@@ -198,7 +199,7 @@ protected:
 
 	float maxJointExtension, minJointExtension;
 	float maxJointForce, minJointForce;
-	std::vector<float> jointExtensionBuckets;
+	std::vector<float> jointExtensionBuckets, forceBuckets;
 
 	int jointIndex;
 	float legForce;
@@ -214,7 +215,7 @@ public:
 
 
 	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -100000.0f, float maxForce = 100000.0f, int nbExt = 9, int nbForce = 15) :
+	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -10000.0f, float maxForce = 10000.0f, int nbExt = 9, int nbForce = 15) :
 																								 state(numJoints),
 																								 maxJointExtension(maxExt),
 																								 minJointExtension(minExt),
@@ -234,10 +235,10 @@ public:
  	}
 
 	jointForceIncrement = (maxJointForce - minJointForce) / (float(numForceBuckets) - 1);
-	// for (int i = 0; i < numForceBuckets; ++i) {
-	// 	bucket = minJointForce + (i * jointForceIncrement);
-	// 	jointForceBuckets.push_back(bucket);
-	// }
+	for (int i = 0; i < numForceBuckets; ++i) {
+		bucket = minJointForce + (i * jointForceIncrement);
+		forceBuckets.push_back(bucket);
+	}
 
  	//start the Force of the wheels at either 0, or slightly positive.
  	midExtensionIndex = numExtensionBuckets / 2;
@@ -321,29 +322,13 @@ public:
 	//BE SURE TO SET JOINT INDEX and LEG FORCE before calling this method!!!!!
 	virtual std::vector<Action> getPossibleActions() {
 		std::vector<Action> actions;
-		//add the trivial action
-		actions.push_back(Action(0, jointIndex));
-
 		if (jointIndex % 3 != 0) {
 			std::cout << "ooo, u just passed a non-knee joint. don't wanna do that.";
 			return actions;
 		}
 
-		//REMEMBER: jointForceIncrement is the increment factor
-		//don't add force if the leg is already fully extended or if max force is applied already.
-		if ( 
-			((legForce + jointForceIncrement) < maxJointForce) &&
-			(state.jointPos.at(jointIndex) < maxJointExtension)
-		   ) {
-
-			actions.push_back(Action(1, jointIndex));
-		}
-		//Likwise apply negative force if the leg is already fully backwards extended or if min force is being applied already.
-		if (
-			((legForce - jointForceIncrement) > minJointForce) &&
-			(state.jointPos.at(jointIndex) > minJointExtension)
-			) {
-			actions.push_back(Action(-1, jointIndex));
+		for (int i = 0; i < forceBuckets.size(); ++i) {
+			actions.push_back(Action(forceBuckets.at(i), jointIndex));
 		}
 
 		return actions;
