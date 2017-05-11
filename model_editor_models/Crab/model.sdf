@@ -29,7 +29,7 @@
       
       <!-- front left leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose> 1.9 1 0 0 0 -1.57</pose>
         <name>fl_leg</name>
       </include>
@@ -48,7 +48,7 @@
 
       <!-- front right leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose> 1.9 -1 0 0 0 1.57</pose>
         <name>fr_leg</name>
       </include>
@@ -67,7 +67,7 @@
 
         <!-- middle left leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose>0 1 0 0 0 -1.57</pose>
         <name>ml_leg</name>
       </include>
@@ -86,7 +86,7 @@
 
       <!-- middle right leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose>0 -1 0 0 0 1.57</pose>
         <name>mr_leg</name>
       </include>
@@ -106,7 +106,7 @@
      
       <!-- rear left leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose>-1.9 1 0 0 0 -1.57</pose>
         <name>rl_leg</name>
       </include>
@@ -125,7 +125,7 @@
 
       <!-- rear right leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose>-1.9 -1 0 0 0 1.57</pose>
         <name>rr_leg</name>
       </include>
