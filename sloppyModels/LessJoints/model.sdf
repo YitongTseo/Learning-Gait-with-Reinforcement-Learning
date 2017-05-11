@@ -1,10 +1,10 @@
 <?xml version='1.0'?>
 <sdf version='1.4'>
-  <model name="Side">
+  <model name="lessjoints">
     <static>false</static>
     <self_collide>1</self_collide>
       <link name='body'>
-        <pose>0 0 .5 0 0 0</pose>
+        <pose>0 0 1.31 0 0 0</pose>
         <inertial>
           <mass>20</mass>
         </inertial>
@@ -29,36 +29,38 @@
       
       <!-- front left leg -->
       <include>
-        <uri>model://SideLeg</uri>
-        <pose> 1.9 1 0 0 0 -1.57</pose>
+        <uri>model://NewLeg</uri>
+        <pose> 1.9 .45 0 0 0 0</pose>
         <name>fl_leg</name>
       </include>
       <joint name="body_to_fl_leg" type="revolute">
         <child>fl_leg::r_thigh_lift</child>
         <parent>body</parent>
-        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <pose frame=''>0 0 0.35 0 0 0</pose>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
           <limit>
           <lower>-1.57</lower>
           <upper>1.57</upper>
         </limit>
-  
         </axis>
       </joint>
 
       <!-- front right leg -->
       <include>
-        <uri>model://SideLeg</uri>
-        <pose> 1.9 -1 0 0 0 1.57</pose>
+        <uri>model://NewLeg</uri>
+        <pose> 1.9 -.45 0 0 0 0</pose>
         <name>fr_leg</name>
       </include>
       <joint name="body_to_fr_leg" type="revolute">
         <child>fr_leg::r_thigh_lift</child>
         <parent>body</parent>
-        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <pose frame=''>0 0 0.35 0 0 0</pose>
         <axis>
-          <xyz> 0 0 1</xyz>
+          <xyz>0 1 0</xyz>
+          <dynamics>
+            <!-- <friction>.5</friction> -->
+          </dynamics>
           <limit>
           <lower>-1.57</lower>
           <upper>1.57</upper>
@@ -67,19 +69,47 @@
       </joint>
 
 
-     
+      <!-- middle left leg -->
+      <!-- <include>
+        <uri>model://NewLeg</uri>
+        <pose> 0 0.45 0 0 0 0</pose>
+        <name>ml_leg</name>
+      </include>
+      <joint name="body_to_ml_leg" type="revolute">
+        <child>ml_leg::r_thigh_lift</child>
+        <parent>body</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+          
+        </axis>
+      </joint> -->
+
+      <!-- middle right leg -->
+<!--       <include>
+        <uri>model://NewLeg</uri>
+        <pose>0 -0.45 0 0 0 0</pose>
+        <name>mr_leg</name>
+      </include>
+      <joint name="body_to_mr_leg" type="revolute">
+        <child>mr_leg::r_thigh_lift</child>
+        <parent>body</parent>
+        <axis>
+          <xyz>0 1 0</xyz>
+        </axis>
+      </joint> -->
+
       <!-- rear left leg -->
       <include>
-        <uri>model://SideLeg</uri>
-        <pose>-1.9 1 0 0 0 -1.57</pose>
+        <uri>model://NewLeg</uri>
+        <pose>-1.9 0.45 0 0 0 0</pose>
         <name>rl_leg</name>
       </include>
       <joint name="body_to_rl_leg" type="revolute">
         <child>rl_leg::r_thigh_lift</child>
         <parent>body</parent>
-        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <pose frame=''>0 0 0.35 0 0 0</pose>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
           <limit>
           <lower>-1.57</lower>
           <upper>1.57</upper>
@@ -89,16 +119,16 @@
 
       <!-- rear right leg -->
       <include>
-        <uri>model://SideLeg</uri>
-        <pose>-1.9 -1 0 0 0 1.57</pose>
+        <uri>model://NewLeg</uri>
+        <pose>-1.9 -0.45 0 0 0 0</pose>
         <name>rr_leg</name>
       </include>
       <joint name="body_to_rr_leg" type="revolute">
         <child>rr_leg::r_thigh_lift</child>
         <parent>body</parent>
-        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <pose frame=''>0 0 0.35 0 0 0</pose>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>0 1 0</xyz>
           <limit>
           <lower>-1.57</lower>
           <upper>1.57</upper>

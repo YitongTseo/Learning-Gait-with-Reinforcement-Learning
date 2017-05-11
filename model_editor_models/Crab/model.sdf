@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.4'>
-  <model name="Side">
+  <model name="Crab">
     <static>false</static>
     <self_collide>1</self_collide>
       <link name='body'>
@@ -29,7 +29,7 @@
       
       <!-- front left leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose> 1.9 1 0 0 0 -1.57</pose>
         <name>fl_leg</name>
       </include>
@@ -38,18 +38,17 @@
         <parent>body</parent>
         <pose frame=''>0 0 0.3 0 0 0</pose>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>1 0 0</xyz>
           <limit>
-          <lower>-1.57</lower>
+          <lower>-0.523</lower>
           <upper>1.57</upper>
         </limit>
-  
         </axis>
       </joint>
 
       <!-- front right leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose> 1.9 -1 0 0 0 1.57</pose>
         <name>fr_leg</name>
       </include>
@@ -58,19 +57,56 @@
         <parent>body</parent>
         <pose frame=''>0 0 0.3 0 0 0</pose>
         <axis>
-          <xyz> 0 0 1</xyz>
+          <xyz> 1 0 0</xyz>
           <limit>
-          <lower>-1.57</lower>
+          <lower>-0.523</lower>
           <upper>1.57</upper>
         </limit>
         </axis>
       </joint>
 
+        <!-- middle left leg -->
+      <include>
+        <uri>model://CrabLeg</uri>
+        <pose>0 1 0 0 0 -1.57</pose>
+        <name>ml_leg</name>
+      </include>
+      <joint name="body_to_ml_leg" type="revolute">
+        <child>ml_leg::r_thigh_lift</child>
+        <parent>body</parent>
+        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+          <lower>-0.523</lower>
+          <upper>1.57</upper>
+        </limit>
+        </axis>
+      </joint>
 
+      <!-- middle right leg -->
+      <include>
+        <uri>model://CrabLeg</uri>
+        <pose>0 -1 0 0 0 1.57</pose>
+        <name>mr_leg</name>
+      </include>
+      <joint name="body_to_mr_leg" type="revolute">
+        <child>mr_leg::r_thigh_lift</child>
+        <parent>body</parent>
+        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+          <lower>-0.523</lower>
+          <upper>1.57</upper>
+        </limit>
+        </axis>
+      </joint>
+      
      
       <!-- rear left leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose>-1.9 1 0 0 0 -1.57</pose>
         <name>rl_leg</name>
       </include>
@@ -79,9 +115,9 @@
         <parent>body</parent>
         <pose frame=''>0 0 0.3 0 0 0</pose>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>1 0 0</xyz>
           <limit>
-          <lower>-1.57</lower>
+          <lower>-0.523</lower>
           <upper>1.57</upper>
         </limit>
         </axis>
@@ -89,7 +125,7 @@
 
       <!-- rear right leg -->
       <include>
-        <uri>model://SideLeg</uri>
+        <uri>model://CrabLeg</uri>
         <pose>-1.9 -1 0 0 0 1.57</pose>
         <name>rr_leg</name>
       </include>
@@ -98,13 +134,15 @@
         <parent>body</parent>
         <pose frame=''>0 0 0.3 0 0 0</pose>
         <axis>
-          <xyz>0 0 1</xyz>
+          <xyz>1 0 0</xyz>
           <limit>
-          <lower>-1.57</lower>
+          <lower>-0.523</lower>
           <upper>1.57</upper>
         </limit>
         </axis>
       </joint>
+
       <self_collide>1</self_collide>
+
     </model>
 </sdf>
