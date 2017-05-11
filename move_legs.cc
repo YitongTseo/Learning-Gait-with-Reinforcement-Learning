@@ -56,6 +56,8 @@ namespace gazebo
 
       jointCount = 1;
       count = 0;
+      prevCumSum = 0;
+      cumSum = 0;
 
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
@@ -97,6 +99,12 @@ namespace gazebo
     float newLegForce = action.force;
     hipJoint->SetForce(0, newLegForce);
 
+    physics::JointPtr kneeJoint = this->jointsVector[action.jointIndex - 1];
+    kneeJoint->SetForce(0, -1.0f * newLegForce);
+
+    
+
+
 
     // float knee_Vs_HipForceDifference = 10.0f;
 
@@ -112,7 +120,11 @@ namespace gazebo
     //gotta feed the state the current positions
     std::vector<float> positions;
     for (int i = 0; i < this->jointsVector.size(); ++i) {
-      float jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
+      float jointAngle = 0.0f;
+      //this makes sure that only the hip joints are included as part of the state b/c the knee joints are being set from the hip force
+      if (i % 2 == 1) {
+	jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
+      }
       positions.push_back(jointAngle);
     }
     we.setRobotPosition(positions);
@@ -140,7 +152,7 @@ namespace gazebo
 
    
     //the greater the velocity the better.
-    float reward = (relativeVelocity.x)* 100;
+    float reward = (relativeVelocity.x) * 100; // + relativePosition.y)* 100;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     if (std::abs(relativeRotation.x) > 0.5) {
@@ -148,6 +160,17 @@ namespace gazebo
     }
     
     cout << "\nreward " << reward;
+
+    if (cumSumCount > 1000) {
+      prevCumSum = cumSum;
+      cumSumCount = 0;
+      cumSum = 0.0f;
+    }
+    cumSum += reward;
+    cumSumCount++;
+
+    cout << "\n cumSum: " << cumSum << " previous cumSum: " << prevCumSum << " cumSum count " << cumSumCount;
+
 
     //Relative rotation comes in the form: RPY, so to put it in the right order...
     this->we.setRobotOrientationYPR(relativeRotation.z, relativeRotation.y, relativeRotation.x);
@@ -195,7 +218,7 @@ namespace gazebo
     
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 1) % this->jointsVector.size();
+    jointCount = (jointCount + 2) % this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;
@@ -206,6 +229,11 @@ namespace gazebo
   //this will be between 0 and some number.
   private: int count;
   private: std::vector<State> last5States;
+    
+    //cumulative sum of rewards to see if we're improving
+  private: float cumSum;
+  private: float prevCumSum;
+  private: int cumSumCount; //
 
     // Pointer to the model
   private: physics::ModelPtr model;
