@@ -62,8 +62,9 @@
         </axis>
       </joint>
 
+
       <!-- middle left leg -->
-      <include>
+      <!-- <include>
         <uri>model://leg2</uri>
         <pose> 0 0.45 0 0 0 0</pose>
         <name>ml_leg</name>
@@ -73,14 +74,12 @@
         <parent>body</parent>
         <axis>
           <xyz>0 1 0</xyz>
-          <dynamics>
-            <!-- <friction>.5</friction> -->
-          </dynamics>
+          
         </axis>
-      </joint>
+      </joint> -->
 
       <!-- middle right leg -->
-      <include>
+<!--       <include>
         <uri>model://leg2</uri>
         <pose>0 -0.45 0 0 0 0</pose>
         <name>mr_leg</name>
@@ -90,11 +89,8 @@
         <parent>body</parent>
         <axis>
           <xyz>0 1 0</xyz>
-          <dynamics>
-            <!-- <friction>.5</friction> -->
-          </dynamics>
         </axis>
-      </joint>
+      </joint> -->
 
       <!-- rear left leg -->
       <include>

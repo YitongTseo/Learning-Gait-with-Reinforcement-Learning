@@ -44,7 +44,7 @@ namespace gazebo
 
       float alpha = 0.9f; 
       float gamma = 0.1f;
-      float epsilon = 0.3f;
+      float epsilon = 0.2f;
       ql = qLearningAgent(we, alpha, gamma, epsilon);
       std::cout<<"3\n";
 
@@ -87,8 +87,8 @@ namespace gazebo
     leftJoint->SetForce(0, newLegForce);
 
     //TODO: maybe treat 2 legs the same?
-    // physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
-    // rightJoint->SetForce(0, newLegForce);
+    physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
+    rightJoint->SetForce(0, newLegForce);
 
 
 
@@ -120,7 +120,7 @@ namespace gazebo
 
    
     //the greater the velocity the better.
-    float reward = relativePosition.x * 2;
+    float reward = relativeVelocity.x * 2;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     if (std::abs(relativeRotation.x) > 0.5) {
@@ -151,7 +151,7 @@ namespace gazebo
     //should we restart?
     if (this->we.isTerminal() || last5StatesAreSame){
       //then call update Beliefs with those arguments.
-      float terribleReward = -1000.0f;
+      float terribleReward = -10.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
       this->we.reset(); //reset environment so q learning can learn the correct beliefs
 
@@ -159,7 +159,7 @@ namespace gazebo
       this->model->Reset();//teleport the model back to original position
 
       //reset links and joints
-      for (int i = 0; i < 18; ++i) {
+      for (int i = 0; i < this->jointsVector.size(); ++i) {
         this->jointsVector.at(i)->Reset();
       }
       std::vector<physics::LinkPtr> links = this->model->GetLinks();
@@ -175,7 +175,7 @@ namespace gazebo
     
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 3) % 18;
+    jointCount = (jointCount + 6) % this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;

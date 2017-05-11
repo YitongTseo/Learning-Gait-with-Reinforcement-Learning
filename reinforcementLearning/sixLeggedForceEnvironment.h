@@ -13,14 +13,14 @@ public:
 	std::vector<float> jointVel; //18 robot joint velocities. 3 per leg. (elbow, shoulder, hip)
 	std::vector<float> roboOrientation; //Yaw, pitch, roll
 	//We will restrict the state space in practice by never visiting some, (i.e. fixing fewer paramters that control all of these)
-	
+	int numJoints;
 
-	State(){
+	State(int nm): numJoints(nm){
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
 
-		for(int i = 0; i < 18; ++i ){
+		for(int i = 0; i < numJoints; ++i ){
 			jointPos.push_back(0.0f);
 			jointVel.push_back(0.0f);
 		}
@@ -51,7 +51,7 @@ public:
 	// }
 
 	void updateJoints(std::vector<float> positions) {
-		for(int i = 0; i<=17; ++i ){
+		for(int i = 0; i< numJoints; ++i ){
 
 			if( i % 3 == 2){
 				//the hip joints are: 2, 5, 8, 11, 14, 17
@@ -67,7 +67,7 @@ public:
 	}
 
 	void updateVelocities(std::vector<float> velocities) {
-		for(int i = 0; i<=17; ++i ){
+		for(int i = 0; i< numJoints; ++i ){
 			jointVel.at(i) = 0.0f;//velocities.at(i);
 		}
 	}
@@ -172,7 +172,7 @@ struct hash<StateAction>
 class Environment {
 
 public:
-  virtual State getCurrentState() {return State();}
+  virtual State getCurrentState() {return State(-18);}
   virtual std::vector<Action>  getPossibleActions() { return std::vector<Action>(); }
   virtual void doAction(Action& a) {}
   virtual float getReward(State& state, Action& a) {return 12321.0f;}
@@ -214,8 +214,8 @@ public:
 
 
 	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(float maxExt = 1.57f, float minExt = -1.57f, float minForce = -10000.0f, float maxForce = 10000.0f, int nbExt = 9, int nbForce = 15) :
-																								 state(),
+	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -100000.0f, float maxForce = 100000.0f, int nbExt = 9, int nbForce = 15) :
+																								 state(numJoints),
 																								 maxJointExtension(maxExt),
 																								 minJointExtension(minExt),
 																								 maxJointForce(maxForce),
@@ -242,7 +242,7 @@ public:
  	//start the Force of the wheels at either 0, or slightly positive.
  	midExtensionIndex = numExtensionBuckets / 2;
 	std::vector<float> startingJointPositions;
-	for (int i = 0; i < 18; ++i) {
+	for (int i = 0; i < state.numJoints; ++i) {
 		//we want to start all the joints at the SAME POSITION. Hence calling jointBuckets.
 		startingJointPositions.push_back(jointExtensionBuckets.at(midExtensionIndex));
 	}
@@ -275,7 +275,7 @@ public:
 	void setRobotPosition(std::vector<float> positions) {
 		std::vector<float> bucketedPositions;
 
-		for(int i = 0; i<=17; ++i ){
+		for(int i = 0; i< state.numJoints; ++i ){
 
 			if( i % 3 == 2){
 				//the hip joints are: 2, 5, 8, 11, 14, 17
@@ -307,7 +307,7 @@ public:
 			}
 		}
 
-		for (int i = 0; i < 18; ++i) {
+		for (int i = 0; i < state.numJoints; ++i) {
 			std::cout << "\n bucketedPosition i" << i << ": " << bucketedPositions.at(i);
 		}
 		state.updateJoints(bucketedPositions);
@@ -352,7 +352,7 @@ public:
 	//when reset is called. the robot is gonna have to also be teleported back to position.
 	void reset() {
 		std::vector<float> empty;
-		for (int i = 0; i < 18; ++i) {
+		for (int i = 0; i < state.numJoints; ++i) {
 			empty.push_back(0.0f);
 		}
 		state.updateJoints(empty);

@@ -70,8 +70,12 @@ Action qLearningAgent::computeActionFromQValues(){
 float qLearningAgent::getQValue(const Action& action) {
 	State state(environment->getCurrentState());
 	StateAction sa(state, action);
+
+
 	//if beliefDict contains sa then return the value for sa, else 0.0f
-	return (beliefDict.count(sa) > 0) ? beliefDict.at(sa) : 0.0f;
+	return (beliefDict.count(sa) > 0) ? beliefDict.at(sa) : 10.0f; //TODO: THIS MIGHT BE A BAD IDEA
+	//return (beliefDict.count(sa) > 0) ? beliefDict.at(sa) : 0.0f; //TODO: 
+
 }
 
 float qLearningAgent::computeValueFromQValues(){
