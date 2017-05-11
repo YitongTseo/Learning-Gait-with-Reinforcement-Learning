@@ -10,6 +10,25 @@ To run create a build folder following the instructions here: http://gazebosim.o
 
 ## TIPS and TRICKS to make things work.
 
+let <path> be the path into the folder Learning-Gait-with-Reinforcement-Learning.... (e.g. Users/zandermajercik/AI/Learning-Gait-with-Reinforcement-Learning)
+
+Probably want to enter the following commands/add them to ~/.bashrc:
+export GAZEBO_RESOURCE_PATH=/usr/local/share/gazebo-8:/usr/local/share/gazebo_models:
+export GAZEBO_RESOURCE_PATH=<path>:${GAZEBO_RESOURCE_PATH}  <- that colon at the end of path is VERY important. has to end ... Learning-Gait-with-Reinforcement-Learning: NOT Learning-Gait-with-Reinforcement-Learning/ NOT Learning-Gait-with-Reinforcement-Learning
+export GAZEBO_PLUGIN_PATH=<path>/model_editor_models: <- again the colon is verrrry important
+export GAZEBO_MODEL_PATH=<path>/build <- NO COLON THIS TIME!
+
+echo $GAZEBO_MODEL_PATH should get you <path>/model_editor_models
+(e.g. /Users/zandermajercik/AI/Learning-Gait-with-Reinforcement-Learning/model_editor_models)
+
+echo $GAZEBO_PLUGIN_PATH should get something like
+Users/zandermajercik/AI/Learning-Gait-with-Reinforcement-Learning/build:
+
+echo $GAZEBO_RESOURCE_PATH should get something like:
+/Users/zandermajercik/AI/Learning-Gait-with-Reinforcement-Learning:/usr/local/share/gazebo-8:/usr/local/share/gazebo_models:
+
+
+
 
 for me at least gazebo is stored at:
 /usr/local/share/gazebo-8/
