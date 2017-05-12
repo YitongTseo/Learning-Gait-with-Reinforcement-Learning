@@ -21,12 +21,12 @@
 #include "reinforcementLearning/qLearning.cpp"
 #include <gazebo/physics/physics.hh>
 #include <gazebo/common/common.hh>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <stdio.h>
 #include <vector>
 
-namespace gazebo
-{
+using namespace gazebo;
+
 
   class MoveLegs : public ModelPlugin
   {
@@ -42,7 +42,7 @@ namespace gazebo
       we = SixLegsForceEnvironment();
       std::cout<<"2";
 
-      float alpha = 0.1f; 
+      float alpha = 0.1f;
       float gamma = 0.9f;
       float epsilon = 0.2f;
       ql = qLearningAgent(we, alpha, gamma, epsilon);
@@ -89,13 +89,18 @@ namespace gazebo
     Action action = this->ql.getAction();
     cout << "action: jointIndex: " << action.jointIndex << "  force: " << action.force;
 
-    //this is a crab so we dumb it down to only learn on two joints
-    for (int i = 0; i < this->jointsVector.size(); ++i) {
-      if (i % 2 == jointCount) {
-        //move the actual joints in Gazebo
-        physics::JointPtr hipJoint = this->jointsVector[i];
-        float newLegForce = action.force;
-        hipJoint->SetForce(0, newLegForce);  
+    float newLegForce = action.force;
+    for (int i = 0; i < (this->jointsVector.size() / 2); ++i) {
+      int j = (2 * i) + 1;
+
+      if (j % 4 == jointCount) {
+        physics::JointPtr hipJoint = this->jointsVector[j];
+        hipJoint->SetForce(0, newLegForce);
+
+        //set the knee joints to exert the opposite force as the hip joints.
+        //thereby creating an elLiptical walk pattern.
+        physics::JointPtr kneeJoint = this->jointsVector[j - 1];
+        kneeJoint->SetForce(0, newLegForce);
       }
     }
 
@@ -104,9 +109,9 @@ namespace gazebo
     std::vector<float> positions;
     for (int i = 0; i < this->jointsVector.size(); ++i) {
       float jointAngle = 0.0f;
-      //only push on the one joint that we're learning on (be it jointCount == 0 or jointCount == 1)
-      if (i == jointCount) {
+      if (i == 1 || i == 3) {
         jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
+
       }
       positions.push_back(jointAngle);
     }
@@ -114,7 +119,7 @@ namespace gazebo
 
 
     State nextState = this->we.getCurrentState();
-   
+
 
 
     math::Vector3 relativeVelocity = this->model->GetRelativeLinearVel();
@@ -122,30 +127,30 @@ namespace gazebo
     math::Vector3 relativeRotation = relativePose.rot.GetAsEuler();
     math::Vector3 relativePosition = relativePose.pos;
 
-    std::cout << "\nrelative POSITION: x: " << relativePosition.x << " y: " 
+    std::cout << "\nrelative POSITION: x: " << relativePosition.x << " y: "
       << relativePosition.y << " z: " << relativePosition.z;
 
-    std::cout << "\n         relative VELOCITY: x: " << relativeVelocity.x << " y: " 
+    std::cout << "\n         relative VELOCITY: x: " << relativeVelocity.x << " y: "
       << relativeVelocity.y << " z: " << relativeVelocity.z;
 
-    std::cout << "\n         roll: " << relativeRotation.x << " pitch: " 
+    std::cout << "\n         roll: " << relativeRotation.x << " pitch: "
       << relativeRotation.y << " yaw: " << relativeRotation.z;
 
     //std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
 
-   
+
     //the greater the velocity the better.
-    float reward = (relativePosition.z)* 100;
+    float reward = (relativeVelocity.y)* 100;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     // if (std::abs(relativeRotation.x) > 0.5) {
     //   reward -= std::abs(relativeRotation.x);
     // }
-    
+
     cout << "\nreward " << reward;
 
     if (CumSumCount > 1000) {
-      PrevCumSum = CumSumCount;
+      PrevCumSum = (CumSum/ float(CumSumCount));
       CumSumCount = 0;
       CumSum = 0;
     }
@@ -155,7 +160,7 @@ namespace gazebo
 
     //Relative rotation comes in the form: RPY, so to put it in the right order...
     this->we.setRobotOrientationYPR(relativeRotation.z, relativeRotation.y, relativeRotation.x);
-    
+
     //then call update Beliefs with those arguments.
     this->ql.updateBeliefs(oldState, action, nextState, reward);
 
@@ -175,7 +180,7 @@ namespace gazebo
     //should we restart?
     if (this->we.isTerminal()) { // || last5StatesAreSame){
       //then call update Beliefs with those arguments.
-      float terribleReward = 1000.0f;
+      float terribleReward = -1000.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
       this->we.reset(); //reset environment so q learning can learn the correct beliefs
 
@@ -196,10 +201,10 @@ namespace gazebo
       last5States.erase(last5States.begin()); //pop off the front (oldest state)
     }
     last5States.push_back(nextState);
-    
+
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 1) % 2;//this->jointsVector.size();
+    jointCount = (jointCount + 2) % 4;//this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;
@@ -211,7 +216,7 @@ namespace gazebo
   private: int count;
   private: std::vector<State> last5States;
 
-  //save the last cumulative sum of the reward and the count so we can get some measure of if our model is improving 
+  //save the last cumulative sum of the reward and the count so we can get some measure of if our model is improving
   float CumSum, PrevCumSum;
   int CumSumCount;
 
@@ -227,4 +232,3 @@ namespace gazebo
 
   // Register this plugin with the simulator
   GZ_REGISTER_MODEL_PLUGIN(MoveLegs)
-}
