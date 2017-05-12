@@ -65,7 +65,7 @@
         <use_parent_model_frame>1</use_parent_model_frame>
         <limit>
           <lower>-1.57</lower>
-          <upper>0</upper>
+          <upper>1.57</upper>
         </limit>
       </axis>
     </joint>

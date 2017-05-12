@@ -11,10 +11,11 @@
       <uri>model://sun</uri>
     </include>
 
-    <model name="stompy">
+    <model name="buggy">
       <include>
           <static>false</static>
-          <uri>model://simplesix</uri>
+          <uri>model://Side</uri> 
+         <!-- <uri>model://simplesix</uri> -->
       </include>
 
       <plugin name="move_legs" filename="libmove_legs.so"/>

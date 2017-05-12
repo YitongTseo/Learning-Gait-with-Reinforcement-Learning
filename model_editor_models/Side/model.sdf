@@ -67,6 +67,44 @@
       </joint>
 
 
+            <!-- middle left leg -->
+      <include>
+        <uri>model://SideLeg</uri>
+        <pose>-0 1 0 0 0 -1.57</pose>
+        <name>ml_leg</name>
+      </include>
+      <joint name="body_to_ml_leg" type="revolute">
+        <child>ml_leg::r_thigh_lift</child>
+        <parent>body</parent>
+        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+          <lower>-1.57</lower>
+          <upper>1.57</upper>
+        </limit>
+        </axis>
+      </joint>
+
+      <!-- middle right leg -->
+      <include>
+        <uri>model://SideLeg</uri>
+        <pose>-0 -1 0 0 0 1.57</pose>
+        <name>mr_leg</name>
+      </include>
+      <joint name="body_to_mr_leg" type="revolute">
+        <child>mr_leg::r_thigh_lift</child>
+        <parent>body</parent>
+        <pose frame=''>0 0 0.3 0 0 0</pose>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+          <lower>-1.57</lower>
+          <upper>1.57</upper>
+        </limit>
+        </axis>
+      </joint>
+
      
       <!-- rear left leg -->
       <include>
