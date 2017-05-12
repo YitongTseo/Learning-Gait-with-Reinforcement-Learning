@@ -14,7 +14,7 @@
     <model name="buggy">
       <include>
           <static>false</static>
-          <uri>model://Side</uri> 
+          <uri>model://Crab</uri> 
          <!-- <uri>model://simplesix</uri> -->
       </include>
 

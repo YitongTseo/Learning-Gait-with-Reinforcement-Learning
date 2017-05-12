@@ -89,24 +89,23 @@ namespace gazebo
     Action action = this->ql.getAction();
     cout << "action: jointIndex: " << action.jointIndex << "  force: " << action.force;
 
-
-    //move the actual joints in Gazebo
-    physics::JointPtr hipJoint = this->jointsVector[action.jointIndex];
-    float newLegForce = action.force;
-    hipJoint->SetForce(0, newLegForce);
-
-    //set the knee joints to exert the opposite force as the hip joints.
-    //thereby creating an eliptical walk pattern.
-    physics::JointPtr kneeJoint = this->jointsVector[action.jointIndex - 1];
-    kneeJoint->SetForce(0, -newLegForce);
+    //this is a crab so we dumb it down to only learn on two joints
+    for (int i = 0; i < this->jointsVector.size(); ++i) {
+      if (i % 2 == jointCount) {
+        //move the actual joints in Gazebo
+        physics::JointPtr hipJoint = this->jointsVector[i];
+        float newLegForce = action.force;
+        hipJoint->SetForce(0, newLegForce);  
+      }
+    }
 
 
     //gotta feed the state the current positions
     std::vector<float> positions;
     for (int i = 0; i < this->jointsVector.size(); ++i) {
       float jointAngle = 0.0f;
-      //only push on the hip joints (b/c knee joints are determined from hip joints)
-      if (i % 2 == 1) {
+      //only push on the one joint that we're learning on (be it jointCount == 0 or jointCount == 1)
+      if (i == jointCount) {
         jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
       }
       positions.push_back(jointAngle);
@@ -136,23 +135,23 @@ namespace gazebo
 
    
     //the greater the velocity the better.
-    float reward = (relativeVelocity.x)* 100;
+    float reward = (relativePosition.z)* 100;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
-    if (std::abs(relativeRotation.x) > 0.5) {
-      reward -= std::abs(relativeRotation.x);
-    }
+    // if (std::abs(relativeRotation.x) > 0.5) {
+    //   reward -= std::abs(relativeRotation.x);
+    // }
     
     cout << "\nreward " << reward;
 
-    if (CumSumCount > 100) {
+    if (CumSumCount > 1000) {
       PrevCumSum = CumSumCount;
       CumSumCount = 0;
       CumSum = 0;
     }
     CumSumCount++;
     CumSum += reward;
-    cout << "\nAverage: " << (CumSum / CumSumCount) << " Old Average: " << (PrevCumSum / 100.0f);
+    cout << "\ncount: "  << CumSumCount <<" Average: " << (CumSum / CumSumCount) << " Old Average: " << (PrevCumSum / 100.0f);
 
     //Relative rotation comes in the form: RPY, so to put it in the right order...
     this->we.setRobotOrientationYPR(relativeRotation.z, relativeRotation.y, relativeRotation.x);
@@ -174,9 +173,9 @@ namespace gazebo
     }
 
     //should we restart?
-    if (this->we.isTerminal() || last5StatesAreSame){
+    if (this->we.isTerminal()) { // || last5StatesAreSame){
       //then call update Beliefs with those arguments.
-      float terribleReward = -2.0f;
+      float terribleReward = 1000.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
       this->we.reset(); //reset environment so q learning can learn the correct beliefs
 
@@ -200,7 +199,7 @@ namespace gazebo
     
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 2) % this->jointsVector.size();
+    jointCount = (jointCount + 1) % 2;//this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;

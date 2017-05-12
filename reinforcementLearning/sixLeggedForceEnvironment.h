@@ -213,7 +213,7 @@ public:
 
 
 	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -25000.0f, float maxForce = 25000.0f, int nbExt = 9, int nbForce = 15) :
+	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -10000.0f, float maxForce = 10000.0f, int nbExt = 9, int nbForce = 15) :
 																								 state(numJoints),
 																								 maxJointExtension(maxExt),
 																								 minJointExtension(minExt),
