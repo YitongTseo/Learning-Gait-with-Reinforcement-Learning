@@ -1,17 +1,6 @@
 /*
- * Copyright (C) 2012 Open Source Robotics Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Adapted from template code from 2012 Open Source Robotics Foundation
+ * by: Yitong Tseo, David Burt, Zander Majercik in accordance to the their Apache License
  *
  */
 #include <boost/bind.hpp>
@@ -38,21 +27,16 @@ using namespace gazebo;
       //store the pointers to the joints
       this->jointsVector = this->model->GetJoints();
 
-      std::cout<<"\n1";
-      we = SixLegsForceEnvironment();
-      std::cout<<"2";
-
       float alpha = 0.1f;
       float gamma = 0.9f;
       float epsilon = 0.2f;
+      we = SixLegsForceEnvironment();
       ql = qLearningAgent(we, alpha, gamma, epsilon);
-      std::cout<<"3\n";
 
       std::cout << "\nnumJoints: " << this->jointsVector.size();
       for (int i = 0; i < this->jointsVector.size(); ++i) {
         std::cout << "\n" << i << " joint name: " << this->jointsVector.at(i)->GetName();
       }
-
 
       jointCount = 1;
       count = 0;
@@ -66,10 +50,9 @@ using namespace gazebo;
 
     }
 
-  // Called by the world update start event
   public: void OnUpdate(const common::UpdateInfo & /*_info*/)
   {
-    //count helps us skip time steps (100 at a time currently)
+    //count helps us skip time steps to give our robot a chance to move a bit before thinking about its next action
     count++;
     if (count < 500) {
       return;
@@ -105,7 +88,6 @@ using namespace gazebo;
       }
     }
 
-
     //gotta feed the state the current positions
     std::vector<float> positions;
     for (int i = 0; i < this->jointsVector.size(); ++i) {
@@ -120,7 +102,8 @@ using namespace gazebo;
 
 
     State nextState = this->we.getCurrentState();
-
+    cout << "\n nextState!"
+    nextState.print();
 
 
     math::Vector3 relativeVelocity = this->model->GetRelativeLinearVel();

@@ -1,3 +1,4 @@
+//code written by: Yitong Tseo, David Burt, Zander Majercik
 #include <iostream>
 #include <tuple>
 #include <unordered_map>
@@ -8,74 +9,45 @@
 class State {
 public:
 
-	// [left front elbow, left front shoulder, left front hip, right front elbow, ... ]
-	std::vector<float> jointPos; //18 robot joint angles. 3 per leg. (elbow, shoulder, hip)
-	std::vector<float> jointVel; //18 robot joint velocities. 3 per leg. (elbow, shoulder, hip)
-	std::vector<float> roboOrientation; //Yaw, pitch, roll
-	//We will restrict the state space in practice by never visiting some, (i.e. fixing fewer paramters that control all of these)
+	//if using a robot from Stompy's family: given an N limbed robot there are 3N robot joint angles (elbow, shoulder, hip)
+	// jointPos = [left front elbow, left front shoulder, left front hip, right front elbow, right front shoulder, right front hip, left middle elbow]
+
+	//if using a robot from Crabby/Buggy's family: given an N limbed robot there are 2N robot joint angles (elbow, hip)
+	// jointPos = [left front elbow, left front hip, right front elbow, right front hip, left middle elbow]
+	std::vector<float> jointPos; 
+	std::vector<float> roboOrientation; //[Yaw, pitch, roll]
+	//We will restrict the state space in practice by giving some joints smaller buckets, (i.e. fixing fewer paramters that control all of these)
 	int numJoints;
 
 	State(int nm): numJoints(nm){
+		//initialize everything to zero.
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
 
 		for(int i = 0; i < numJoints; ++i ){
 			jointPos.push_back(0.0f);
-			jointVel.push_back(0.0f);
 		}
 	}
-
-	//This constructor only takes in two joint angles. sets 3 legs to be the same.
-	// State(float leftAngle, float rightAngle, float yaw, float pitch, float roll): FIXEDHIPPOS(0.0f){
-	// 	roboOrientation.push_back(yaw);
-	// 	roboOrientation.push_back(pitch);
-	// 	roboOrientation.push_back(roll);
-	//
-	// 	for(int i = 0; i<=17; ++i ){
-	// 		if( i % 3 == 2){
-	// 			//the hip joints are: 2, 5, 8, 11, 14, 17
-	// 			jointPos.push_back(FIXEDHIPPOS);
-	// 		}
-	// 		else if( i % 6 < 2) {
-	// 			//for 0, 1, 6, 7, 12, 13
-	// 			jointPos.push_back(leftAngle);
-	// 		}
-	// 		else if( i % 6 > 2) {
-	// 			//for 3, 4, 9, 10, 15, 16
-	// 			jointPos.push_back(rightAngle);
-	// 		}
-	//
-	// 		jointVel.push_back(0.0f);
-	// 	}
-	// }
 
 	void updateJoints(std::vector<float> positions) {
 		for(int i = 0; i< numJoints; ++i ){
 			jointPos.at(i) = positions.at(i);
-
-			// if( i % 3 == 2){
-			// 	//the hip joints are: 2, 5, 8, 11, 14, 17
-			// 	jointPos.at(i) = 0.0f;
-			// }
-			// else if (i % 3 == 0) {
-			// 	//For now we can only control the knees
-			// 	jointPos.at(i) = positions.at(i);
-			// } else {
-			// 	jointPos.at(i) = 0.0f;
-			// }
 		}
 	}
 
-	void updateVelocities(std::vector<float> velocities) {
-		for(int i = 0; i< numJoints; ++i ){
-			jointVel.at(i) = 0.0f;//velocities.at(i);
+	void print(){
+		for(int i = 0; i < jointPos.size(); ++i){
+			std::cout << "\n state i"  << i <<  "  joint pos: "<<jointPos[i];
 		}
+		std::cout << "\n state yaw:" <<roboOrientation[0];
+		std::cout << "\n state pitch:" <<roboOrientation[1];
+		std::cout << "\n state roll:" <<roboOrientation[2];
 	}
 
 	void updateYPR(float yaw, float pitch, float roll) {
 		roboOrientation[0] = yaw;
-		roboOrientation[1] = pitch; //TODO: maybe think about making this zero. robo can't fall down this way
+		roboOrientation[1] = pitch;
 		roboOrientation[2] = roll;
 	}
 
@@ -84,9 +56,6 @@ public:
 			if (jointPos[i] != other.jointPos[i]) {
 				return true;
 			}
-			// if (state.jointVel[i] != other.state.jointVel[i]) {
-			// 	return false;
-			// }
 		}
 		return (roboOrientation[0] != other.roboOrientation[0] ||
 			    roboOrientation[1] != other.roboOrientation[1] ||
@@ -98,7 +67,7 @@ public:
 
 class Action {
 public:
-	//Actions will apply force equal to increment * state.jointForceIncrement to the joint corresponding to jointIndex
+	//Actions will apply the specified amount of force to the joint corresponding to jointIndex
 	int jointIndex;
 	float force;
 
@@ -120,15 +89,12 @@ public:
 			if (state.jointPos[i] != other.state.jointPos[i]) {
 				return false;
 			}
-			// if (state.jointVel[i] != other.state.jointVel[i]) {
-			// 	return false;
-			// }
 		}
 		return (state.roboOrientation[0] == other.state.roboOrientation[0] &&
-				    state.roboOrientation[1] == other.state.roboOrientation[1] &&
-				    state.roboOrientation[2] == other.state.roboOrientation[2] &&
-	          other.action.force == action.force &&
-	          other.action.jointIndex == action.jointIndex);
+			    state.roboOrientation[1] == other.state.roboOrientation[1] &&
+			    state.roboOrientation[2] == other.state.roboOrientation[2] &&
+	            other.action.force == action.force &&
+	            other.action.jointIndex == action.jointIndex);
 	 }
 
 	~StateAction() {}
@@ -139,35 +105,37 @@ namespace std{
 
 template<>
 
+//need a hash function in order to store StateAction instances in the beliefDict in qLearningAgent
 struct hash<StateAction>
   {
     std::size_t operator()(const StateAction& sa) const
     {
       using std::size_t;
       using std::hash;
+      /*
+		  NOTE: hash function loosely based off of example found here:
+	      http://stackoverflow.com/questions/17016175/c-unordered-map-using-a-custom-class-type-as-the-key
+      	  I have no idea if this is a good hash function. Sorry in advance.
+      */
 
-      // Compute individual hash values for first,
-      // second and third and combine them using XOR
-      // and bit shifting:
-			int size = sa.state.jointPos.size();
+	  int size = sa.state.jointPos.size();  
 
-			std::size_t h = 0;
-		  for(int i = 0; i < size; ++i) {
-				h = h ^ (hash<float>()(sa.state.jointPos[i]) << i);
-			}
+	  std::size_t h = 0;
+	  for(int i = 0; i < size; ++i) {
+	  	h = h ^ (hash<float>()(sa.state.jointPos[i]) << i);
+	  }
 
-
-      //note I have no idea if this is a good hash function. Sorry in advance. -Yitong
       return ((hash<float>()(sa.state.roboOrientation[0])
-               ^ (hash<float>()(sa.state.roboOrientation[1]) << 1)) >> 1)
-  		       ^ ((hash<float>()(sa.state.roboOrientation[2]) << 5) >> 2)
-  		       ^ ((hash<float>()(sa.action.force) << 3))
-               ^ (hash<int>()(sa.action.jointIndex) << 1)
-               ^ h;
+            ^ (hash<float>()(sa.state.roboOrientation[1]) << 1)) >> 1)
+  		    ^ ((hash<float>()(sa.state.roboOrientation[2]) << 5) >> 2)
+  	        ^ ((hash<float>()(sa.action.force) << 3))
+            ^ (hash<int>()(sa.action.jointIndex) << 1)
+            ^ h;
     }
   };
 }
 
+//the default Environment class initailizes everything to return wonky values so it'll be easier to detect bugs
 class Environment {
 
 public:
@@ -176,7 +144,7 @@ public:
   virtual void doAction(Action& a) {}
   virtual float getReward(State& state, Action& a) {return 12321.0f;}
   virtual void reset() {}
-  virtual bool isTerminal(int robotXPos, int robotZPos) {return false;} //Could implement isTerminal wihout making it virtual, but we leave the option open for now
+  virtual bool isTerminal(int robotXPos, int robotZPos) {return false;} 
   Environment() {};
   virtual ~Environment() {};
 };
@@ -189,72 +157,72 @@ class SixLegsForceEnvironment : public Environment {
 protected:
 	State state;
 
-	//number of buckets to put joint positions in range [minJointExtension, maxJointExtension]
+	//number of buckets to put joint forces in range [minJointForce, maxJointForce] 
+	//number of buckets to put positions in range [minJointExtension, maxJointExtension] respectively
+	//NOTE: best to keep the numExtensionBuckets as an odd numbers and for maxJointExtension == -minJointExtension that way joint positions are initialized to zero.
 	int numForceBuckets, numExtensionBuckets;
-
-	//compute this once in the constructor to avoid confusion
-	int midExtensionIndex, midForceIndex;
-
 	float maxJointExtension, minJointExtension;
 	float maxJointForce, minJointForce;
+
+	//we compute jointExtensionBuckets, forceBuckets once in the constructor and then never change them. For bucketing purposes.
+	//Every action should only include forces from forceBuckets 
+	//and every state should only have joint positions that are in jointExtensionBuckets
 	std::vector<float> jointExtensionBuckets, forceBuckets;
 
+	//compute these once in the constructor to avoid confusion
+	int midExtensionIndex, midForceIndex;
+
+	//necessary evil global variables which are set via setJointIndexLegForce() so that getPossibleActions() doesn't need to take arguments
+	//qLearning.cpp relies on the getPossibleActions() method from all environments to be argumentless.
 	int jointIndex;
 	float legForce;
 
 public:
 	
-	float jointForceIncrement;
-	//e.g.
-	//if maxEst = 1, minExt = -1 and nb = 5:
-	// -1   -0.5    0     0.5     1
-	//  0     1     2      3      4
-	//midJointIndex = 2
 
 
-	//best to keep the buckets as odd numbers
-	SixLegsForceEnvironment(int numJoints = 12, float maxExt = 1.57f, float minExt = -1.57f, float minForce = -10000.0f, float maxForce = 10000.0f, int nbExt = 9, int nbForce = 15) :
-																								 state(numJoints),
-																								 maxJointExtension(maxExt),
-																								 minJointExtension(minExt),
-																								 maxJointForce(maxForce),
-																								 minJointForce(minForce),
-																								 numExtensionBuckets(nbExt),
-																								 numForceBuckets(nbForce),
-																								 jointIndex(0),
-																							     legForce(0.0f){
+	SixLegsForceEnvironment(int numJoints = 12, 
+						   float maxExt = 1.57f, 
+						   float minExt = -1.57f, 
+						   float minForce = -10000.0f, 
+						   float maxForce = 10000.0f, 
+						   int nbExt = 9, 
+						   int nbForce = 15) : state(numJoints),
+											   maxJointExtension(maxExt),
+											   minJointExtension(minExt),
+											   maxJointForce(maxForce),
+											   minJointForce(minForce),
+											   numExtensionBuckets(nbExt),
+											   numForceBuckets(nbForce),
+											   jointIndex(0),  //NOTE: these will be set by the plugin via setJointIndexLegForce()
+										       legForce(0.0f){ //so we only initialize so the C++ compiler won't yell at us.
 
 
- 	const float jointExtensionIncrement = (maxJointExtension - minJointExtension) / (float(numExtensionBuckets) - 1);
- 	float bucket;
- 	for (int i = 0; i < numExtensionBuckets; ++i) {
- 		bucket = minJointExtension + (i * jointExtensionIncrement);
- 		jointExtensionBuckets.push_back(bucket);
+		//initialize the bucket vectors: jointExtensionBuckets and forceBuckets. They will serve
+		//as references whenever we need to set a jointPosition in state or a force value in an action.
+		//This way our StateAction space will remain discrete and hopefully small
+	 	const float jointExtensionIncrement = (maxJointExtension - minJointExtension) / (float(numExtensionBuckets) - 1);
+	 	float bucket;
+	 	for (int i = 0; i < numExtensionBuckets; ++i) {
+	 		bucket = minJointExtension + (i * jointExtensionIncrement);
+	 		jointExtensionBuckets.push_back(bucket);
+	 	}
+
+		const float jointForceIncrement = (maxJointForce - minJointForce) / (float(numForceBuckets) - 1);
+		for (int i = 0; i < numForceBuckets; ++i) {
+			bucket = minJointForce + (i * jointForceIncrement);
+			forceBuckets.push_back(bucket);
+		}
+
+	 	//integer division so we start the position of the wheels at either 0, or slightly positive.
+	 	midExtensionIndex = numExtensionBuckets / 2;
+		std::vector<float> startingJointPositions;
+		for (int i = 0; i < state.numJoints; ++i) {
+			//we want to start all the joints at the SAME POSITION. Hence calling jointBuckets.
+			startingJointPositions.push_back(jointExtensionBuckets.at(midExtensionIndex));
+		}
+		state.updateJoints(startingJointPositions);
  	}
-
-	jointForceIncrement = (maxJointForce - minJointForce) / (float(numForceBuckets) - 1);
-	for (int i = 0; i < numForceBuckets; ++i) {
-		bucket = minJointForce + (i * jointForceIncrement);
-		forceBuckets.push_back(bucket);
-	}
-
- 	//start the Force of the wheels at either 0, or slightly positive.
- 	midExtensionIndex = numExtensionBuckets / 2;
-	std::vector<float> startingJointPositions;
-	for (int i = 0; i < state.numJoints; ++i) {
-		//we want to start all the joints at the SAME POSITION. Hence calling jointBuckets.
-		startingJointPositions.push_back(jointExtensionBuckets.at(midExtensionIndex));
-	}
-	state.updateJoints(startingJointPositions);
-
-	//TODO: deal with velocities
-	// midF
-	// std::vector<float> startin
-	// for (int i = 0; i < 18; ++i) {
-	// 	//we want to start all the joints at the SAME POSITION. Hence calling join
-	// 	startingJointPositions.push_back(jointBuckets
-	// }
- }
 
 	//returns state not by pointer but by value.
 	virtual State getCurrentState() {
@@ -263,7 +231,7 @@ public:
 
 	void setRobotOrientationYPR(float yaw, float pitch, float roll) {
 		//round rv to the nearest 10s decimal place
-		//TODO: rounding -2 pi to 2pi like this is sloppy as hell.
+		//In this way we round the continuous range [-pi, pi] into ~62 buckets
 		yaw = roundf(yaw * 10.0f) / 10.0f;
 		pitch = roundf(pitch * 10.0f) / 10.0f;
 		roll = roundf(roll * 10.0f) / 10.0f;
@@ -275,45 +243,30 @@ public:
 		std::vector<float> bucketedPositions;
 
 		for(int i = 0; i< state.numJoints; ++i ){
+			//Have to find which bucket in numExtensionBuckets the continous float positions.at(i) is closest to 
+			//Right now this bucketing algorithm is O(N) with respect to numExtensionBuckets.size() which is alright b/c numExtensionBuckets.size() is pretty small.
+			//but could be reduced to O(logN) via binary search b/c numExtensionBuckets is ordered.
 
-			// if( i % 3 == 2){
-			// 	//the hip joints are: 2, 5, 8, 11, 14, 17
-			// 	bucketedPositions.push_back(0.0f);
-			// }
-			// else if (i % 3 == 0) {
+			//initialize closestFloat to the last possible bucket value. That way if all the checks fall thru it'll be correct.
+			float closestFloat = jointExtensionBuckets.at(jointExtensionBuckets.size() - 1);
+			float average;
 
+			for(int j = 1; j < jointExtensionBuckets.size(); ++j) {
+				average = (jointExtensionBuckets.at(j - 1) + jointExtensionBuckets.at(j)) / 2.0f;
 
-				//For now we can only control the knees
-				//of all the buckets which one is closest to positions.at(i)
-
-				//TODO: make this not O(N)
-				float average = 0.0f;
-				//initialize closestFloat to the last possible bucket value. That way if all the checks fall thru it'll be correct.
-				float closestFloat = jointExtensionBuckets.at(jointExtensionBuckets.size() - 1);
-
-				for(int j = 1; j < jointExtensionBuckets.size(); ++j) {
-					average = (jointExtensionBuckets.at(j - 1) + jointExtensionBuckets.at(j)) / 2.0f;
-
-					if (positions.at(i) < average) {
-						// we know that actual must fall between jointExtensionBuckets.at(j - 1) and jointExtensionBuckets.at(j)
-						// and that it must be closest to jointExtensionBuckets.at(j - 1)
-						closestFloat = jointExtensionBuckets.at(j - 1);
-						break;
-					}
+				if (positions.at(i) < average) {
+					// we know that actual must fall between jointExtensionBuckets.at(j - 1) and jointExtensionBuckets.at(j)
+					// and that it must be closest to jointExtensionBuckets.at(j - 1)
+					closestFloat = jointExtensionBuckets.at(j - 1);
+					break;
 				}
-				bucketedPositions.push_back(closestFloat);
-
-			// } else {
-			// 	bucketedPositions.push_back(0.0f);
-			// }
-		}
-
-		for (int i = 0; i < state.numJoints; ++i) {
-			std::cout << "\n bucketedPosition i" << i << ": " << bucketedPositions.at(i);
+			}
+			bucketedPositions.push_back(closestFloat);
 		}
 		state.updateJoints(bucketedPositions);
 	}
 
+	//GIVE THIS METHOD THE jointIndex and legForce before calling qLearningAgent.getAction() b/c getAction() calls getPossibleActions() which depends on these values!
 	void setJointIndexLegForce(int ji, float lf) {
 		jointIndex = ji;
 		legForce = lf;
@@ -322,20 +275,14 @@ public:
 	//BE SURE TO SET JOINT INDEX and LEG FORCE before calling this method!!!!!
 	virtual std::vector<Action> getPossibleActions() {
 		std::vector<Action> actions;
-
-		// if (jointIndex % 2 == 0) {
-		// 	std::cout << "ooo, u just passed a knee joint. don't wanna do that.";
-		// 	return actions;
-		// }
-
+		//probably a better way to copy a vector by value but too lazy to research.
 		for (int i = 0; i < forceBuckets.size(); ++i) {
 			actions.push_back(Action(forceBuckets.at(i), jointIndex));
 		}
-
 		return actions;
 	}
 
-	//when reset is called. the robot is gonna have to also be teleported back to position.
+	//when reset is called be sure to teleport the robot back to starting position with the ModelPlugin.
 	void reset() {
 		std::vector<float> empty;
 		for (int i = 0; i < state.numJoints; ++i) {
@@ -346,7 +293,8 @@ public:
 		state.updateYPR(0.0f, 0.0f, 0.0f);
 	}
 
-	//TODO: have a reward associated with reward that's very shitty.
+	//returns true if the robot has fallen over (and most likely can't get up)
+	//If you want the robot to walk then be sure to punish the robot with a large negative reward when isTerminal() == true
 	bool isTerminal() {
 		float pitch = state.roboOrientation[1];
 		float roll = state.roboOrientation[2];

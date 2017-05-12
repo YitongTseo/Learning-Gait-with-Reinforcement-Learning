@@ -1,3 +1,5 @@
+David Burt, Yitong Tseo, Zander Majercik
+
 # Learning-Gait-with-Reinforcement-Learning
 Learning 3D gait for wheeled vehicles, six legged models, and quadrupedal models using Q-Learning and other Reinforcement Learning techniques
 
@@ -8,15 +10,36 @@ Must have Gazebo installed. (make sure Ruby is up to date) and have a C++ compil
 To run create a build folder following the instructions here: http://gazebosim.org/tutorials?tut=animated_box
 
 
-## TIPS and TRICKS to make things work.
+## Basic Structure of the Code:
+
+.world files specify a world consisting of models (i.e. sun, ground, and one of our jointed models)
+In the .world file the models are also given plugins which can listen to attributes of the models, control the joints of the models, reset the world, etc.
+
+Our models are stored under the model/ directory. For the legged models, we made standalone leg models which we then fit into a cohesive model with a body (e.g. Crab is a model composed of six CrabLeg models)
+
+turn_wheels.cc and six_legs.cc are our two plugins (six_legs is currently set up to handle six legged movement but can easily be refitted for four legged movement). turn_wheels.cc and six_legs.cc can be thought of as the "middle man" between qLeaerning and actually interfacing with the models. 
+
+turn_wheels.cc and six_legs.cc create an instance of a subclass of Environment (WheelsEnvironment SixLegsForceEnvironment respectively) and create an instance of qLearningAgents, feeding the qLearningAgent an Environment subclass.
+
+qLearningAgent was written to be able to learn given any instance of an Environment (which it needs for the getPossibleActions() method) as well as some State, Action, and StateAction classes (all defined in wheeledRobotEnvironment2.h and sixLeggedForceEnvironment.h). 
+
+
+
+## TIPS and TRICKS to connect everything correctly:
 
 let <path> be the path into the folder Learning-Gait-with-Reinforcement-Learning.... (e.g. Users/zandermajercik/AI/Learning-Gait-with-Reinforcement-Learning)
 
-Probably want to enter the following commands/add them to ~/.bashrc:
+### Probably want to enter the following commands/add them to ~/.bashrc:
+
 export GAZEBO_RESOURCE_PATH=/usr/local/share/gazebo-8:/usr/local/share/gazebo_models:
-export GAZEBO_RESOURCE_PATH=<path>:${GAZEBO_RESOURCE_PATH}  <- that colon at the end of path is VERY important. has to end ... Learning-Gait-with-Reinforcement-Learning: NOT Learning-Gait-with-Reinforcement-Learning/ NOT Learning-Gait-with-Reinforcement-Learning
-export GAZEBO_PLUGIN_PATH=<path>/model_editor_models: <- again the colon is verrrry important
-export GAZEBO_MODEL_PATH=<path>/build <- NO COLON THIS TIME!
+
+export GAZEBO_RESOURCE_PATH=<path>:${GAZEBO_RESOURCE_PATH} <- pay extra attention to the colon there.
+
+export GAZEBO_PLUGIN_PATH=<path>/build: 
+
+export GAZEBO_MODEL_PATH=<path>/models
+
+### To check things are set correctly:
 
 echo $GAZEBO_MODEL_PATH should get you <path>/model_editor_models
 (e.g. /Users/zandermajercik/AI/Learning-Gait-with-Reinforcement-Learning/model_editor_models)
@@ -29,33 +52,16 @@ echo $GAZEBO_RESOURCE_PATH should get something like:
 
 
 
+## Misc Tips and Tricks
 
 for me at least gazebo is stored at:
 /usr/local/share/gazebo-8/
 
 **if gazebo isn’t starting.**
-type gazebo —verbose
+type "gazebo —verbose" for more information
 
 **if you find something like: Error [RTShaderSystem.cc:408] Unable to find shader lib.**
 export GAZEBO_RESOURCE_PATH=/usr/local/share/gazebo-8:/usr/local/share/gazebo_models:${GAZEBO_RESOURCE_PATH}
+
+
 ^but before doing that unset the GAZEBO_RESOURCE_PATH
-
-
-
-**when plugins don’t work first check what the path is set to.**
-echo $GAZEBO_PLUGIN_PATH
-
-To unset the path if its a mess
-unset GAZEBO_PLUGIN_PATH
-
-Just appends the current pwd to the end of GAZEBO_PLUGIN_PATH (INSIDE THE /build folder!!!!!!)
-export GAZEBO_PLUGIN_PATH=`pwd`:$GAZEBO_PLUGIN_PATH
-
-instead, you probably want to use this. (INSIDE THE /build folder!!!!!!)
-export GAZEBO_PLUGIN_PATH=$PWD
-
-
-**if it can’t find the model:**
-it’s probably a problem with
-GAZEBO_MODEL_PATH
-http://answers.gazebosim.org/question/177/gazebo-default-directory-and-can-not-insert-model/
