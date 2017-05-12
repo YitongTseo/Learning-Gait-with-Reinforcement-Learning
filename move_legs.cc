@@ -56,6 +56,9 @@ namespace gazebo
 
       jointCount = 1;
       count = 0;
+      CumSumCount = 0;
+      CumSum = 0;
+      PrevCumSum = 0;
 
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
@@ -81,14 +84,9 @@ namespace gazebo
     cout << "\nleg force: " << legForce;
 
     this->we.setJointIndexLegForce(jointCount, legForce);
-    // if (action.jointIndex % 2 == 0) {
-    //   //dealing with the knee joints
-    //   newLegForce *= knee_Vs_HipForceDifference;
-    // }
 
 
     Action action = this->ql.getAction();
-
     cout << "action: jointIndex: " << action.jointIndex << "  force: " << action.force;
 
 
@@ -97,22 +95,20 @@ namespace gazebo
     float newLegForce = action.force;
     hipJoint->SetForce(0, newLegForce);
 
+    //set the knee joints to exert the opposite force as the hip joints.
+    //thereby creating an eliptical walk pattern.
+    physics::JointPtr kneeJoint = this->jointsVector[action.jointIndex - 1];
+    kneeJoint->SetForce(0, -newLegForce);
 
-    // float knee_Vs_HipForceDifference = 10.0f;
-
-    //set the knee joint to follow.
-    // physics::JointPtr kneeJoint = this->jointsVector.at(action.jointIndex - 1);
-    // kneeJoint->SetForce(0, newLegForce); // / knee_Vs_HipForceDifference);
-
-
-    // //HERE WE'RE MOVING THE FRONT LEFT AND BACK RIGHT
-    // physics::JointPtr rightJoint = this->jointsVector[action.jointIndex + 3];
-    // rightJoint->SetForce(0, newLegForce);
 
     //gotta feed the state the current positions
     std::vector<float> positions;
     for (int i = 0; i < this->jointsVector.size(); ++i) {
-      float jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
+      float jointAngle = 0.0f;
+      //only push on the hip joints (b/c knee joints are determined from hip joints)
+      if (i % 2 == 1) {
+        jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
+      }
       positions.push_back(jointAngle);
     }
     we.setRobotPosition(positions);
@@ -148,6 +144,15 @@ namespace gazebo
     }
     
     cout << "\nreward " << reward;
+
+    if (CumSumCount > 100) {
+      PrevCumSum = CumSumCount;
+      CumSumCount = 0;
+      CumSum = 0;
+    }
+    CumSumCount++;
+    CumSum += reward;
+    cout << "\nAverage: " << (CumSum / CumSumCount) << " Old Average: " << (PrevCumSum / 100.0f);
 
     //Relative rotation comes in the form: RPY, so to put it in the right order...
     this->we.setRobotOrientationYPR(relativeRotation.z, relativeRotation.y, relativeRotation.x);
@@ -195,7 +200,7 @@ namespace gazebo
     
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 1) % this->jointsVector.size();
+    jointCount = (jointCount + 2) % this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;
@@ -206,6 +211,10 @@ namespace gazebo
   //this will be between 0 and some number.
   private: int count;
   private: std::vector<State> last5States;
+
+  //save the last cumulative sum of the reward and the count so we can get some measure of if our model is improving 
+  float CumSum, PrevCumSum;
+  int CumSumCount;
 
     // Pointer to the model
   private: physics::ModelPtr model;
