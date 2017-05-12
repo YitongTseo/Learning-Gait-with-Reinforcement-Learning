@@ -139,12 +139,12 @@ using namespace gazebo;
     //std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
 
 
-    //the greater the velocity the better.
-    float reward = (relativeVelocity.y)* 100;
+    //the greater the roll the better. pls roll over
+    float reward = (std::abs(relativeRotation.x) + std::abs(relativeRotation.y)) * 100;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     // if (std::abs(relativeRotation.x) > 0.5) {
-    //   reward -= std::abs(relativeRotation.x);
+    //reward += std::abs(relativeRotation.x);
     // }
 
     cout << "\nreward " << reward;
@@ -156,7 +156,7 @@ using namespace gazebo;
     }
     CumSumCount++;
     CumSum += reward;
-    cout << "\ncount: "  << CumSumCount <<" Average: " << (CumSum / CumSumCount) << " Old Average: " << (PrevCumSum / 100.0f);
+    cout << "\ncount: "  << CumSumCount <<" Average: " << (CumSum / CumSumCount) << " Old Average: " << (PrevCumSum);
 
     //Relative rotation comes in the form: RPY, so to put it in the right order...
     this->we.setRobotOrientationYPR(relativeRotation.z, relativeRotation.y, relativeRotation.x);
@@ -180,7 +180,7 @@ using namespace gazebo;
     //should we restart?
     if (this->we.isTerminal()) { // || last5StatesAreSame){
       //then call update Beliefs with those arguments.
-      float terribleReward = -1000.0f;
+      float terribleReward = 1000.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
       this->we.reset(); //reset environment so q learning can learn the correct beliefs
 
