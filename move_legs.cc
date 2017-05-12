@@ -90,17 +90,18 @@ using namespace gazebo;
     cout << "action: jointIndex: " << action.jointIndex << "  force: " << action.force;
 
     float newLegForce = action.force;
-    for (int i = 0; i < (this->jointsVector.size() / 2); ++i) {
-      int j = (2 * i) + 1;
-
+    for (int j = 0; j < 4; ++j) {
       if (j % 4 == jointCount) {
-        physics::JointPtr hipJoint = this->jointsVector[j];
-        hipJoint->SetForce(0, newLegForce);
+        physics::JointPtr frontJoint = this->jointsVector[j];
+        frontJoint->SetForce(0, newLegForce);
 
         //set the knee joints to exert the opposite force as the hip joints.
         //thereby creating an elLiptical walk pattern.
-        physics::JointPtr kneeJoint = this->jointsVector[j - 1];
-        kneeJoint->SetForce(0, newLegForce);
+        physics::JointPtr midJoint = this->jointsVector[j + 4];
+        midJoint->SetForce(0, newLegForce);
+
+        physics::JointPtr rearJoint = this->jointsVector[j + 8];
+        rearJoint->SetForce(0, newLegForce);
       }
     }
 
@@ -109,7 +110,7 @@ using namespace gazebo;
     std::vector<float> positions;
     for (int i = 0; i < this->jointsVector.size(); ++i) {
       float jointAngle = 0.0f;
-      if (i == 1 || i == 3) {
+      if ( 0 <= i && i <= 3) {
         jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
 
       }
@@ -140,7 +141,7 @@ using namespace gazebo;
 
 
     //the greater the roll the better. pls roll over
-    float reward = (std::abs(relativeRotation.x) + std::abs(relativeRotation.y)) * 100;
+    float reward = relativeVelocity.y * 100;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     // if (std::abs(relativeRotation.x) > 0.5) {
@@ -180,7 +181,7 @@ using namespace gazebo;
     //should we restart?
     if (this->we.isTerminal()) { // || last5StatesAreSame){
       //then call update Beliefs with those arguments.
-      float terribleReward = 1000.0f;
+      float terribleReward = -1000.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
       this->we.reset(); //reset environment so q learning can learn the correct beliefs
 
@@ -204,7 +205,7 @@ using namespace gazebo;
 
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 2) % 4;//this->jointsVector.size();
+    jointCount = (jointCount + 1) % 4;//this->jointsVector.size();
   }
 
   private: SixLegsForceEnvironment we;
