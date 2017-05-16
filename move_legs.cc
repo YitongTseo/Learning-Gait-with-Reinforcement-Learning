@@ -1,17 +1,6 @@
 /*
- * Copyright (C) 2012 Open Source Robotics Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Adapted from template code from 2012 Open Source Robotics Foundation
+ * by: Yitong Tseo, David Burt, Zander Majercik in accordance to the Apache License
  *
  */
 #include <boost/bind.hpp>
@@ -38,27 +27,22 @@ using namespace gazebo;
       //store the pointers to the joints
       this->jointsVector = this->model->GetJoints();
 
-      std::cout<<"\n1";
-      we = SixLegsForceEnvironment();
-      std::cout<<"2";
-
       float alpha = 0.1f;
       float gamma = 0.9f;
       float epsilon = 0.2f;
+      we = SixLegsForceEnvironment();
       ql = qLearningAgent(we, alpha, gamma, epsilon);
-      std::cout<<"3\n";
 
       std::cout << "\nnumJoints: " << this->jointsVector.size();
       for (int i = 0; i < this->jointsVector.size(); ++i) {
         std::cout << "\n" << i << " joint name: " << this->jointsVector.at(i)->GetName();
       }
 
-
       jointCount = 1;
       count = 0;
-      CumSumCount = 0;
-      CumSum = 0;
-      PrevCumSum = 0;
+      CSumCount = 0;
+      CSum = 0;
+      PrevCSum = 0;
 
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
@@ -66,10 +50,9 @@ using namespace gazebo;
 
     }
 
-  // Called by the world update start event
   public: void OnUpdate(const common::UpdateInfo & /*_info*/)
   {
-    //count helps us skip time steps (100 at a time currently)
+    //count helps us skip time steps to give our robot a chance to move a bit before thinking about its next action
     count++;
     if (count < 500) {
       return;
@@ -80,9 +63,11 @@ using namespace gazebo;
     State oldState(this->we.getCurrentState());
     float legForce = this->jointsVector.at(jointCount)->GetForce(0);
 
-    cout << "\njoint index: " << jointCount;
-    cout << "\nleg force: " << legForce;
+    //For viewing force applied to joints
+    //cout << "\njoint index: " << jointCount;
+    //cout << "\nleg force: " << legForce;
 
+    //Set the force
     this->we.setJointIndexLegForce(jointCount, legForce);
 
 
@@ -90,26 +75,26 @@ using namespace gazebo;
     cout << "action: jointIndex: " << action.jointIndex << "  force: " << action.force;
 
     float newLegForce = action.force;
-    for (int i = 0; i < (this->jointsVector.size() / 2); ++i) {
-      int j = (2 * i) + 1;
-
+    for (int j = 0; j < 4; ++j) {
       if (j % 4 == jointCount) {
-        physics::JointPtr hipJoint = this->jointsVector[j];
-        hipJoint->SetForce(0, newLegForce);
+        physics::JointPtr frontJoint = this->jointsVector[j];
+        frontJoint->SetForce(0, newLegForce);
 
         //set the knee joints to exert the opposite force as the hip joints.
         //thereby creating an elLiptical walk pattern.
-        physics::JointPtr kneeJoint = this->jointsVector[j - 1];
-        kneeJoint->SetForce(0, newLegForce);
+        physics::JointPtr midJoint = this->jointsVector[j + 4];
+        midJoint->SetForce(0, newLegForce);
+
+        physics::JointPtr rearJoint = this->jointsVector[j + 8];
+        rearJoint->SetForce(0, newLegForce);
       }
     }
-
 
     //gotta feed the state the current positions
     std::vector<float> positions;
     for (int i = 0; i < this->jointsVector.size(); ++i) {
       float jointAngle = 0.0f;
-      if (i == 1 || i == 3) {
+      if ( 0 <= i && i <= 3) {
         jointAngle = float(this->jointsVector.at(i)->GetAngle(0).Radian());
 
       }
@@ -119,7 +104,8 @@ using namespace gazebo;
 
 
     State nextState = this->we.getCurrentState();
-
+    cout << "\n nextState!"
+    nextState.print();
 
 
     math::Vector3 relativeVelocity = this->model->GetRelativeLinearVel();
@@ -136,11 +122,12 @@ using namespace gazebo;
     std::cout << "\n         roll: " << relativeRotation.x << " pitch: "
       << relativeRotation.y << " yaw: " << relativeRotation.z;
 
-    //std::cout << "\n         GETLENGTH " << relativeVelocity.GetLength();
 
+    //As discussed in our presentation and paper, we experimented
+    //with a number of different reward functions.
+    //The current reward function rewards jumping.
 
-    //the greater the roll the better. pls roll over
-    float reward = (relativeVelocity.y) * 100;
+    float reward = relativeVelocity.y * 100;
 
     //we want to punish high roll. maybe roll above a threshold? let's say 0.5
     // if (std::abs(relativeRotation.x) > 0.5) {
@@ -149,14 +136,15 @@ using namespace gazebo;
 
     cout << "\nreward " << reward;
 
-    if (CumSumCount > 1000) {
-      PrevCumSum = (CumSum/ float(CumSumCount));
-      CumSumCount = 0;
-      CumSum = 0;
+    //Keep a count to track the average reward, and ensure that it is increasing (that the model is learning)
+    if (CSumCount > 1000) {
+      PrevCSum = (CSum/ float(CSumCount));
+      CSumCount = 0;
+      CSum = 0;
     }
-    CumSumCount++;
-    CumSum += reward;
-    cout << "\ncount: "  << CumSumCount <<" Average: " << (CumSum / CumSumCount) << " Old Average: " << (PrevCumSum);
+    CSumCount++;
+    CSum += reward;
+    cout << "\ncount: "  << CSumCount <<" Average: " << (CSum / CSumCount) << " Old Average: " << (PrevCSum);
 
     //Relative rotation comes in the form: RPY, so to put it in the right order...
     this->we.setRobotOrientationYPR(relativeRotation.z, relativeRotation.y, relativeRotation.x);
@@ -178,7 +166,7 @@ using namespace gazebo;
     }
 
     //should we restart?
-    if (this->we.isTerminal()) { // || last5StatesAreSame){
+    if (this->we.isTerminal()) {
       //then call update Beliefs with those arguments.
       float terribleReward = -1000.0f;
       this->ql.updateBeliefs(oldState, action, nextState, terribleReward);
@@ -204,30 +192,31 @@ using namespace gazebo;
 
     //increment the jointCount.
     //Right now we're skipping everything but the knee joints.
-    jointCount = (jointCount + 2) % 4;//this->jointsVector.size();
+    jointCount = (jointCount + 1) % 4;
   }
 
-  private: SixLegsForceEnvironment we;
-  private: qLearningAgent ql;
+  private: 
+    SixLegsForceEnvironment we;
+    qLearningAgent ql;
 
-  //this is going to alwasy be between 0 - 17, controls which joint we're interested in.
-  private: int jointCount;
-  //this will be between 0 and some number.
-  private: int count;
-  private: std::vector<State> last5States;
+    //this is going to alwasy be between 0 - 17, controls which joint we're interested in.
+    int jointCount;
+    //this will be between 0 and some number.
+    int count;
+    std::vector<State> last5States;
 
-  //save the last cumulative sum of the reward and the count so we can get some measure of if our model is improving
-  float CumSum, PrevCumSum;
-  int CumSumCount;
+    //save the last cumulative sum of the reward and the count so we can get some measure of if our model is improving
+    float CSum, PrevCSum;
+    int CSumCount;
 
     // Pointer to the model
-  private: physics::ModelPtr model;
+    physics::ModelPtr model;
 
-  // Array of JointPtrs
-  private: std::vector<physics::JointPtr> jointsVector;
+    // Array of JointPtrs
+    std::vector<physics::JointPtr> jointsVector;
 
     // Pointer to the update event connection
-  private: event::ConnectionPtr updateConnection;
+    event::ConnectionPtr updateConnection;
   };
 
   // Register this plugin with the simulator

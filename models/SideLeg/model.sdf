@@ -1,6 +1,10 @@
+<!-- A leg for the insect like model, dubbed buggy.-->
+
 <?xml version='1.0'?>
 <sdf version='1.6'>
   <model name='SideLeg'>
+
+    <!-- Calf specifications -->
     <link name='r_calf'>
       <pose frame=''>0 0 0.25 0 0 0</pose>
       <inertial>
@@ -28,6 +32,7 @@
       </collision>
     </link>
 
+    <!-- Thigh specficiations -->
     <link name='r_thigh_lift'>
       <pose frame=''>0.3 0 0.5 0 1.57 0</pose>
       <inertial>
@@ -35,7 +40,6 @@
       </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
-
       <visual name='r_thigh_lift_geom_visual'>
         <pose frame=''>0 0 0 0 0 0</pose>
         <geometry>
@@ -56,6 +60,7 @@
       </collision>
     </link>
 
+    <!-- Knee Specification, knee has 90 degrees of freedom -->
     <joint name='r_calf_joint' type='revolute'>
       <parent>r_thigh_lift</parent>
       <child>r_calf</child>
@@ -66,7 +71,6 @@
         <limit>
           <lower>0</lower>
           <upper>1.57</upper>
-          <!-- <upper>0</upper>  -->
         </limit>
       </axis>
     </joint>

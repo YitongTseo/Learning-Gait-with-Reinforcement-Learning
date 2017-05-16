@@ -1,3 +1,4 @@
+<!-- code written by: Yitong Tseo, David Burt, Zander Majercik -->
 <?xml version="1.0"?> 
 <sdf version="1.4">
   <world name="six_legs_world">
@@ -14,8 +15,7 @@
     <model name="buggy">
       <include>
           <static>false</static>
-          <uri>model://Crab</uri> 
-         <!-- <uri>model://simplesix</uri> -->
+          <uri>model://Crab</uri>
       </include>
 
       <plugin name="move_legs" filename="libmove_legs.so"/>

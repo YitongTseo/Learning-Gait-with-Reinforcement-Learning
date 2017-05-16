@@ -1,8 +1,10 @@
+<!-- This Model is designed to move "like a crab". Knee and hip joints rotate in the same direction.  -->
 <?xml version='1.0'?>
 <sdf version='1.4'>
   <model name="Crab">
     <static>false</static>
     <self_collide>1</self_collide>
+    <!-- Defines the body Position, mass, collision and visuals. All masses are proportional to volume (i.e models have uniform density). The body model is a rectangular prism.-->
       <link name='body'>
         <pose>0 0 .5 0 0 0</pose>
         <inertial>
@@ -26,7 +28,7 @@
         </visual>
       </link>
 
-      
+      <!-- Six legs are positioned on the corner and middle of the body, rotated 90 degrees from vertical. Legs rotate around the x -axis ("up and down" relative to the body. The legs can rotate downward so as to be completely vertical but can only go 30 degrees above horizontal.-->
       <!-- front left leg -->
       <include>
         <uri>model://CrabLeg</uri>

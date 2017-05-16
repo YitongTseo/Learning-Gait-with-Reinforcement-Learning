@@ -1,8 +1,12 @@
+ <!-- A model with vertical 4 legs with joints connecting to the hips of each leg which are in turn connected to thighs. There is a general issue with hip mobility in this model, likely due to self-collision between thighs and the main body. -->
 <?xml version='1.0'?>
 <sdf version='1.4'>
   <model name="simplefour">
+
     <static>false</static>
     <self_collide>1</self_collide>
+
+    <!-- Main Body -->
       <link name='body'>
         <pose>0 0 1.31 0 0 0</pose>
         <inertial>
@@ -38,9 +42,6 @@
         <parent>body</parent>
         <axis>
           <xyz>0 1 0</xyz>
-          <!-- <dynamics>
-            <friction>.5</friction>
-          </dynamics> -->
         </axis>
       </joint>
 
@@ -55,9 +56,6 @@
         <parent>body</parent>
         <axis>
           <xyz>0 1 0</xyz>
-          <!-- <dynamics>
-            <friction>.5</friction>
-          </dynamics> -->
         </axis>
       </joint>
 

@@ -1,10 +1,12 @@
+<!-- Legs designed for a vertical model with close to the same length thigh and calf (off by just 20%). THe hope was that this would give better stability. Knee joints have a full 180 degrees of movement about the y axis (with respect to the reference fram of the thigh, which aligns with the world frame in this case). Masses are specified to make densities uniform. -->
+
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='leg1'>
+  <model name='EvenLeg'>
     <link name='r_calf'>
-      <pose frame=''>0 0 0.2 0 0 0</pose>
+      <pose frame=''>0 0 0.25 0 0 0</pose>
       <inertial>
-        <mass>.25</mass>
+        <mass>.3125</mass>
       </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
@@ -13,7 +15,7 @@
         <geometry>
           <cylinder>
             <radius>0.1</radius>
-            <length>0.4 </length>
+            <length>0.5 </length>
           </cylinder>
         </geometry>
       </visual>
@@ -22,16 +24,16 @@
         <geometry>
           <cylinder>
             <radius>0.1</radius>
-            <length>0.4</length>
+            <length>0.5</length>
           </cylinder>
         </geometry>
       </collision>
     </link>
 
     <link name='r_thigh_lift'>
-      <pose frame=''>0 0 0.7 0 0 0</pose>
+      <pose frame=''>0 0 0.8 0 0 0</pose>
       <inertial>
-        <mass>.54</mass>
+        <mass>.463</mass>
       </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
@@ -50,33 +52,8 @@
         <geometry>
           <cylinder>
             <radius>0.12</radius>
-            <length>0.7</length>
+            <length>0.6</length>
           </cylinder>
-        </geometry>
-      </collision>
-    </link>
-
-    <link name='hip'>
-      <pose frame=''>0 0 1.06 0 0 0</pose>
-      <inertial>
-        <!-- <mass>1</mass> -->
-      </inertial>
-      <gravity>1</gravity>
-      <self_collide>1</self_collide>
-      <visual name='hip_geom_visual'>
-        <pose frame=''>0 0 0 0 0 0</pose>
-        <geometry>
-          <sphere>
-            <radius>0.12</radius>
-          </sphere>
-        </geometry>
-      </visual>
-      <collision name='hip_geom'>
-        <pose frame=''>0 0 0 0 0 0</pose>
-        <geometry>
-          <sphere>
-            <radius>0.06</radius>
-          </sphere>
         </geometry>
       </collision>
     </link>
@@ -84,34 +61,14 @@
     <joint name='r_calf_joint' type='revolute'>
       <parent>r_thigh_lift</parent>
       <child>r_calf</child>
-      <pose frame=''>0 0 0.2 0 0 0</pose>
+      <pose frame=''>0 0 0.25 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
         <use_parent_model_frame>1</use_parent_model_frame>
         <limit>
-          <lower>-1.5708</lower>
-          <upper>1.5708</upper>
+          <lower>-1.57</lower>
+          <upper>1.57</upper>
         </limit>
-        <dynamics>
-          <!-- <friction>0.8</friction> -->
-        </dynamics>
-      </axis>
-    </joint>
-
-    <joint name='r_thigh_lift_joint' type='revolute'>
-      <parent>hip</parent>
-      <child>r_thigh_lift</child>
-      <pose frame=''>0 0 0.3 0 0 0</pose>
-      <axis>
-        <xyz>0 1 0</xyz>
-        <use_parent_model_frame>1</use_parent_model_frame>
-        <limit>
-          <lower>-1.5708</lower>
-          <upper>1.5708</upper>
-        </limit>
-        <dynamics>
-          <!-- <friction>.5</friction> -->
-        </dynamics>
       </axis>
     </joint>
 
