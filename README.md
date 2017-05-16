@@ -23,7 +23,10 @@ turn_wheels.cc and six_legs.cc create an instance of a subclass of Environment (
 
 qLearningAgent was written to be able to learn given any instance of an Environment (which it needs for the getPossibleActions() method) as well as some State, Action, and StateAction classes (all defined in wheeledRobotEnvironment2.h and sixLeggedForceEnvironment.h). 
 
-toy environment was designed to test the q-learning agent in a basic state action space which we could also work through by hand.
+toyEnvironment.h was designed to test the q-learning agent in a basic state action space which we could also work through by hand.
+
+test.cc is a scratch pad for testing toyEnvironment.h and qLearning.cpp
+
 
 
 
