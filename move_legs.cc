@@ -104,7 +104,7 @@ using namespace gazebo;
 
 
     State nextState = this->we.getCurrentState();
-    cout << "\n nextState!"
+    cout << "\n nextState!";
     nextState.print();
 
 
@@ -125,7 +125,7 @@ using namespace gazebo;
 
     //As discussed in our presentation and paper, we experimented
     //with a number of different reward functions.
-    //The current reward function rewards jumping.
+    //The current reward function rewards walking down the y axis.
 
     float reward = relativeVelocity.y * 100;
 
