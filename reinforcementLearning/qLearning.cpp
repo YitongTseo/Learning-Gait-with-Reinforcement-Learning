@@ -91,17 +91,12 @@ float qLearningAgent::getQValue(const Action& action) {
 float qLearningAgent::computeValueFromQValues(){
   const std::vector<Action>& actions = environment->getPossibleActions();
 
-  	//  As before, get possible actions is nonempty in our implementations, so that this check is not necessary
-
-	// if (actions.size() == 0) {
-	// 	return 0.0f;
-	// }
-
   	//This is orders of magnitude than any negative rewards we give, so we can be sure that the best
 	//Q-value exceeds this initialization
 	float bestValue = -10000000.0f; 
 
 	//Iterate through possible actions from the current state and find the maximum q-value associated to any of these
+	//getPossibleActions is guaranteed to be non-empty
 	for (int i = 0; i < actions.size(); ++i){
 		Action action = actions.at(i);
 		float qValue = getQValue(action);
