@@ -1,3 +1,4 @@
+<!-- A four-legged model with vertical legs and nearly even length thigh and calf links. Rotation of hips and knees aligns. Hips are given a full 180 degrees of movement. Legs are positioned in the four corners. -->
 <?xml version='1.0'?>
 <sdf version='1.4'>
   <model name="Even">

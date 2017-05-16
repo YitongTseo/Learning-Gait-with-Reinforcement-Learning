@@ -1,3 +1,5 @@
+<!-- Legs designed for a vertical model with close to the same length thigh and calf (off by just 20%). THe hope was that this would give better stability. Knee joints have a full 180 degrees of movement about the y axis (with respect to the reference fram of the thigh, which aligns with the world frame in this case). Masses are specified to make densities uniform. -->
+
 <?xml version='1.0'?>
 <sdf version='1.6'>
   <model name='EvenLeg'>

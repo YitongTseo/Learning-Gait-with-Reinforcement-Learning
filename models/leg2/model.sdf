@@ -1,3 +1,4 @@
+<!-- A Leg Model with calfs, thighs and hips, connected by knee joints. There are issues with hip joint mobility, likely because of collision between thigh joints and the model body. Density is set to be uniform across links. -->
 <?xml version='1.0'?>
 <sdf version='1.6'>
   <model name='leg1'>
@@ -58,9 +59,6 @@
 
     <link name='hip'>
       <pose frame=''>0 0 1.06 0 0 0</pose>
-      <inertial>
-        <!-- <mass>1</mass> -->
-      </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
       <visual name='hip_geom_visual'>
@@ -92,9 +90,6 @@
           <lower>-1.5708</lower>
           <upper>1.5708</upper>
         </limit>
-        <dynamics>
-          <!-- <friction>0.8</friction> -->
-        </dynamics>
       </axis>
     </joint>
 
@@ -109,9 +104,6 @@
           <lower>-1.5708</lower>
           <upper>1.5708</upper>
         </limit>
-        <dynamics>
-          <!-- <friction>.5</friction> -->
-        </dynamics>
       </axis>
     </joint>
 

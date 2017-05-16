@@ -1,8 +1,12 @@
+<!-- A model loosely based on an insect, with 6 legs out to the sides of the body. Hip joint rotate forward and backward relative to the main body (around the z-axis, with 180 degrees of rotation. Knees rotate around the world frame x-axis (up and down).-->
+
 <?xml version='1.0'?>
 <sdf version='1.4'>
   <model name="Side">
     <static>false</static>
     <self_collide>1</self_collide>
+
+    <!-- Main Body -->
       <link name='body'>
         <pose>0 0 .5 0 0 0</pose>
         <inertial>

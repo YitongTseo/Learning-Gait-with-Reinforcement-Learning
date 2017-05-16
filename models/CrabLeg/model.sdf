@@ -1,3 +1,5 @@
+<!-- Legs for the crab body. Density is uniform. The joint is able to rotate 90 degrees around the y axis. Note that this is the y axis in the reference frame with respect to the thigh, which is parallel to the x axis in world frame once legs are attached to the body.-->
+
 <?xml version='1.0'?>
 <sdf version='1.6'>
   <model name='CrabLeg'>
@@ -35,7 +37,6 @@
       </inertial>
       <gravity>1</gravity>
       <self_collide>1</self_collide>
-
       <visual name='r_thigh_lift_geom_visual'>
         <pose frame=''>0 0 0 0 0 0</pose>
         <geometry>
