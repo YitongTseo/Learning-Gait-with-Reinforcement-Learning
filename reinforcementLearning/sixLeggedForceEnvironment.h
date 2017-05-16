@@ -5,7 +5,7 @@
 #include <vector>
 #include <math.h>
 
-
+//State spaces consists of joint positions and robot orientation
 class State {
 public:
 
@@ -20,22 +20,26 @@ public:
 	int numJoints;
 
 	State(int nm): numJoints(nm){
-		//initialize everything to zero.
+
+		//Initialize the robot orientation to 0 (default)
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
 		roboOrientation.push_back(0.0f);
 
+		//Initialize all joint positions to 0 (default)
 		for(int i = 0; i < numJoints; ++i ){
 			jointPos.push_back(0.0f);
 		}
 	}
 
+	//used to synchronize beliefs about the current joint states with the actual position in Gazebo
 	void updateJoints(std::vector<float> positions) {
 		for(int i = 0; i< numJoints; ++i ){
 			jointPos.at(i) = positions.at(i);
 		}
 	}
 
+	//Print out current state to help keep track of what the robot is doing
 	void print(){
 		for(int i = 0; i < jointPos.size(); ++i){
 			std::cout << "\n state i"  << i <<  "  joint pos: "<<jointPos[i];
@@ -45,11 +49,13 @@ public:
 		std::cout << "\n state roll:" <<roboOrientation[2];
 	}
 
+	//used to synchronize beliefs about the current orientation with the actual orientation in Gazebo
 	void updateYPR(float yaw, float pitch, float roll) {
 		roboOrientation[0] = yaw;
 		roboOrientation[1] = pitch;
 		roboOrientation[2] = roll;
 	}
+
 
 	bool operator!=(const State &other) const {
 		for(int i = 0; i < other.jointPos.size(); ++i){
@@ -65,6 +71,7 @@ public:
 	~State() {}
 };
 
+//Actions are forces to be applied to each joint
 class Action {
 public:
 	//Actions will apply the specified amount of force to the joint corresponding to jointIndex
@@ -76,6 +83,7 @@ public:
 	~Action() {}
 };
 
+//State action pairs are needed as a seperate class for hashing in the dictionary
 class StateAction {
 public:
 	State state;
@@ -113,10 +121,8 @@ struct hash<StateAction>
       using std::size_t;
       using std::hash;
       /*
-		  NOTE: hash function loosely based off of example found here:
-	      http://stackoverflow.com/questions/17016175/c-unordered-map-using-a-custom-class-type-as-the-key
-      	  I have no idea if this is a good hash function. Sorry in advance.
-      */
+		  NOTE: hash function loosely based off of example found here using bit shifting and XOR on individual floats:
+	      http://stackoverflow.com/questions/17016175/c-unordered-map-using-a-custom-class-type-as-the-key      */
 
 	  int size = sa.state.jointPos.size();  
 
@@ -135,14 +141,15 @@ struct hash<StateAction>
   };
 }
 
-//the default Environment class initailizes everything to return wonky values so it'll be easier to detect bugs
+//the default Environment class initializes everything, default values  are bad to ensure
+//we can tell if it is properly overridden
 class Environment {
 
 public:
   virtual State getCurrentState() {return State(-18);}
   virtual std::vector<Action>  getPossibleActions() { return std::vector<Action>(); }
   virtual void doAction(Action& a) {}
-  virtual float getReward(State& state, Action& a) {return 12321.0f;}
+  virtual float getReward(State& state, Action& a) {return -9999999.0f;}
   virtual void reset() {}
   virtual bool isTerminal(int robotXPos, int robotZPos) {return false;} 
   Environment() {};
@@ -151,7 +158,6 @@ public:
 
 
 
-//Actions in this class set joint position velocity.
 class SixLegsForceEnvironment : public Environment {
 
 protected:
@@ -159,7 +165,9 @@ protected:
 
 	//number of buckets to put joint forces in range [minJointForce, maxJointForce] 
 	//number of buckets to put positions in range [minJointExtension, maxJointExtension] respectively
-	//NOTE: best to keep the numExtensionBuckets as an odd numbers and for maxJointExtension == -minJointExtension that way joint positions are initialized to zero.
+	//NOTE: best to keep the numExtensionBuckets and numForceBuckets as odd numbers 
+	// so that for and for maxJointExtension == -minJointExtension and minForce=-maxForce
+	//the middle index is exactly 0.
 	int numForceBuckets, numExtensionBuckets;
 	float maxJointExtension, minJointExtension;
 	float maxJointForce, minJointForce;
@@ -180,7 +188,8 @@ protected:
 public:
 	
 
-
+	//constructor takes the number of joints, the possible extension (which depend on the model),
+	// and the number of buckets desired
 	SixLegsForceEnvironment(int numJoints = 12, 
 						   float maxExt = 1.57f, 
 						   float minExt = -1.57f, 
@@ -200,7 +209,8 @@ public:
 
 		//initialize the bucket vectors: jointExtensionBuckets and forceBuckets. They will serve
 		//as references whenever we need to set a jointPosition in state or a force value in an action.
-		//This way our StateAction space will remain discrete and hopefully small
+		//This way our StateAction space will remain discrete and hopefully small 
+		//(that is we avoid considering rounded values as distinct)
 	 	const float jointExtensionIncrement = (maxJointExtension - minJointExtension) / (float(numExtensionBuckets) - 1);
 	 	float bucket;
 	 	for (int i = 0; i < numExtensionBuckets; ++i) {
@@ -218,7 +228,7 @@ public:
 	 	midExtensionIndex = numExtensionBuckets / 2;
 		std::vector<float> startingJointPositions;
 		for (int i = 0; i < state.numJoints; ++i) {
-			//we want to start all the joints at the SAME POSITION. Hence calling jointBuckets.
+			//we want to start all the joints at the same neutral position
 			startingJointPositions.push_back(jointExtensionBuckets.at(midExtensionIndex));
 		}
 		state.updateJoints(startingJointPositions);
@@ -230,8 +240,9 @@ public:
 	}
 
 	void setRobotOrientationYPR(float yaw, float pitch, float roll) {
-		//round rv to the nearest 10s decimal place
+		//round each orientation component to the nearest 10s decimal place
 		//In this way we round the continuous range [-pi, pi] into ~62 buckets
+		//many of these are unlikely to be ever reached (for example extreme values of pitch for stable model)
 		yaw = roundf(yaw * 10.0f) / 10.0f;
 		pitch = roundf(pitch * 10.0f) / 10.0f;
 		roll = roundf(roll * 10.0f) / 10.0f;
@@ -244,29 +255,34 @@ public:
 
 		for(int i = 0; i< state.numJoints; ++i ){
 			//Have to find which bucket in numExtensionBuckets the continous float positions.at(i) is closest to 
-			//Right now this bucketing algorithm is O(N) with respect to numExtensionBuckets.size() which is alright b/c numExtensionBuckets.size() is pretty small.
-			//but could be reduced to O(logN) via binary search b/c numExtensionBuckets is ordered.
+			//Since the number of buckets is small (on the order of 9),
+			// we do not bother with binary search as linear search is almost as efficient
 
-			//initialize closestFloat to the last possible bucket value. That way if all the checks fall thru it'll be correct.
+			//initialize closestFloat to the last possible bucket value. That way if all the checks fall through it'll be correct.
 			float closestFloat = jointExtensionBuckets.at(jointExtensionBuckets.size() - 1);
-			float average;
 
+			//Iterate through the buckets, when we first find a bucket bigger than the position, compare 
+			//position to the midpoint this bucket and round based on comparing to this
 			for(int j = 1; j < jointExtensionBuckets.size(); ++j) {
-				average = (jointExtensionBuckets.at(j - 1) + jointExtensionBuckets.at(j)) / 2.0f;
-
-				if (positions.at(i) < average) {
-					// we know that actual must fall between jointExtensionBuckets.at(j - 1) and jointExtensionBuckets.at(j)
-					// and that it must be closest to jointExtensionBuckets.at(j - 1)
-					closestFloat = jointExtensionBuckets.at(j - 1);
+				
+				if (positions.at(i) < jointExtensionBuckets.at(j)) {
+					float average = ( jointExtensionBuckets.at(j - 1)+ jointExtensionBuckets.at(j)) / 2.0f;
+					if (positions.at(i) > average){
+						closestFloat = jointExtensionBuckets.at(j);
+					}
+					else {closestFloat = jointExtensionBuckets.at(j-1);}
 					break;
 				}
+
+
 			}
 			bucketedPositions.push_back(closestFloat);
 		}
 		state.updateJoints(bucketedPositions);
 	}
 
-	//GIVE THIS METHOD THE jointIndex and legForce before calling qLearningAgent.getAction() b/c getAction() calls getPossibleActions() which depends on these values!
+	//GIVE THIS METHOD THE jointIndex and legForce before calling qLearningAgent.getAction()
+	// because getAction() calls getPossibleActions() which depends on these values!
 	void setJointIndexLegForce(int ji, float lf) {
 		jointIndex = ji;
 		legForce = lf;
@@ -275,14 +291,16 @@ public:
 	//BE SURE TO SET JOINT INDEX and LEG FORCE before calling this method!!!!!
 	virtual std::vector<Action> getPossibleActions() {
 		std::vector<Action> actions;
-		//probably a better way to copy a vector by value but too lazy to research.
+		//The amount of force applied to a joint is given by the list of all possible force buckets independent of state
+		//Note that this makes more sense than incrementing force, since changes in velocity are a function of force over time
 		for (int i = 0; i < forceBuckets.size(); ++i) {
 			actions.push_back(Action(forceBuckets.at(i), jointIndex));
 		}
 		return actions;
 	}
 
-	//when reset is called be sure to teleport the robot back to starting position with the ModelPlugin.
+	//Resets internal beliefs. When reset is called be sure to teleport the robot back 
+	//to starting position with the ModelPlugin and reset joint positions.
 	void reset() {
 		std::vector<float> empty;
 		for (int i = 0; i < state.numJoints; ++i) {
