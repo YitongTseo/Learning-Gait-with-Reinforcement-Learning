@@ -289,7 +289,6 @@ public:
 			empty.push_back(0.0f);
 		}
 		state.updateJoints(empty);
-		state.updateVelocities(empty);
 		state.updateYPR(0.0f, 0.0f, 0.0f);
 	}
 
