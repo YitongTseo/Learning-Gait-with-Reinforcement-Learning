@@ -25,8 +25,8 @@
 #include <stdio.h>
 #include <vector>
 
-namespace gazebo
-{
+using namespace gazebo;
+
   enum {
     RIGHT,
     LEFT,
@@ -138,4 +138,4 @@ namespace gazebo
 
   // Register this plugin with the simulator
   GZ_REGISTER_MODEL_PLUGIN(TurnWheels)
-}
+
