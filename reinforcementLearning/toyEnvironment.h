@@ -6,6 +6,7 @@
 
 //Takes in current state and reward state
 
+//State is just current position
 class State {
 public:
 	int position;
@@ -16,6 +17,7 @@ public:
 	~State() {}
 };
 
+//Move Forward, Backward or Stand Still
 class Action {
 public:
 	int move; // +1, 0, 1
@@ -26,6 +28,7 @@ public:
 	~Action() {}
 };
 
+//Pair of State and action for hash map
 class StateAction {
 public: 
 	State state;
@@ -64,6 +67,7 @@ struct hash<StateAction>
   };
 }
 
+//A basic environment to be overwritten
 class Environment {
 
 public:
@@ -72,7 +76,7 @@ public:
   virtual void doAction(Action& a) {}
   virtual float getReward(State& state, Action& a) {return 0.0f;}
   virtual void reset() {}
-  virtual bool isTerminal() {return false;} //Could implement isTerminal wihout making it virtual, but we leave the option open for now
+  virtual bool isTerminal() {return false;}
   Environment() {};
   virtual ~Environment() {};
 };
@@ -105,14 +109,17 @@ public:
 
 	//state is old state (before the action is taken)
 	float getReward(State& state, Action& a) { //override{
-		//moving up or down is not okay.
+		//moving up or down gives a large punishment
 		if (a.move == 2 || a.move == -2) {
 			return -100;
 		}
 
+        //If we reach the left side give a small reward
 		if ((state.position + a.move) == 0) {
 			return 1;
 		}
+        
+        //If we reach the left side give a large reward
 
 		if ((state.position + a.move) == 7) {
 			return 100000;
@@ -125,7 +132,8 @@ public:
 		return state;
 	}
 
-	virtual std::vector<Action> getPossibleActions() {//override {
+    //returns available moves given the current position
+	virtual std::vector<Action> getPossibleActions() {
 		int position = state.position;
 		std::vector<Action> vecOfActions;
 		vecOfActions.push_back(Action(0));
@@ -162,13 +170,15 @@ public:
 	  }
 	}
 
+    //moves agent back to start
 	void reset() {
 		state.position = 2;
 	}
 
+    //returns true if the agent has reached either end or moved up/down
 	bool isTerminal() {
 		int position = state.position;
-		if (state.position == -999 || position == 0) {
+		if (state.position == -999 || position == 0 || state.position == 7) {
 			return true;
 		}
 		return false;
