@@ -20,8 +20,8 @@
 #include <gazebo/common/common.hh>
 #include <stdio.h>
 
-namespace gazebo
-{
+using namespace gazebo;
+
   class AnimatedBox : public ModelPlugin
   {
   public: void Load(physics::ModelPtr _parent, sdf::ElementPtr /*_sdf*/)
@@ -81,4 +81,4 @@ namespace gazebo
 
   // Register this plugin with the simulator
   GZ_REGISTER_MODEL_PLUGIN(AnimatedBox)
-}
+
