@@ -2,52 +2,59 @@
 
 Action qLearningAgent::getAction(){
 	const std::vector<Action> possibleActions = environment->getPossibleActions();
-	// if no possible actions.
-	if (possibleActions.size() == 0) {
-		//TODO: maybe have to reset.
-		return Action(-9999,9999); //should really reset.
-	}
+	// in all models we consider based on implementations of getPossibleActions, possible actions is nonempty
 
 	//randomFloat is between 0 and 1
 	float randomFloat = float(std::rand()) / float(RAND_MAX);
 
+	//Move randomly with probability epsilon
 	if (randomFloat < EPSILON) {
 		int randomIndex = std::rand() % possibleActions.size();
-		return possibleActions.at(randomIndex); //always use at(): it bound checks, [] does not
+		return possibleActions.at(randomIndex); 
 	}
 
 	return computeActionFromQValues();
 }
 
-//outside thing calls getAction, gets the action.
-//Make sure to save the old state.
+//plugin calls getAction, gets the action.
+//plugin also saves the old state.
 //now we have state and action
-//find the reward
-//and the new state. 
+//find the reward and the next state in the plugin
 //then call update Beliefs with those arguments.
 void qLearningAgent::updateBeliefs(const State& state,
 								   const Action& action,
 					       		   const State& nextState,
 				   				   const float reward){
+	//sample is equal to the reward at the current state plus the discounted value of all future reward beliefs
   	float sample = reward + GAMMA * computeValueFromQValues();
+  	//Initialize the old value variable
   	float oldValue = 0.0f;
 
 	const StateAction stateAction(state, action);
 	
+	//get the old belief value from the belief dictionary
 	if (beliefDict.count(stateAction) > 0) {
 	  oldValue = beliefDict.at(stateAction);
 	}
+
+	//update beliefs accoding to the Bellman update rule with learning parameter ALPHA
 	beliefDict[stateAction] = (1 - ALPHA) * oldValue + ALPHA * sample;
 }
 
-
+//Chooses the best action to take from a given states by taking an argmax over possible actions with
+//respect to current reward belief
 Action qLearningAgent::computeActionFromQValues(){
 
 	const std::vector<Action>& actions = environment->getPossibleActions();
-	float bestValue = -10000000.0f; //TODO: check if there is negative inf in C++
-	//storesindices for all actions with equally best qValues so we can break ties later.
+
+	//This is orders of magnitude than any negative rewards we give, so we can be sure that the best
+	//Q-value exceeds this initialization
+	float bestValue = -10000000.0f; 
+
+	//stores indices for all actions with equally best qValues so we can break ties later.
 	std::vector<int> bestActionIndices;
 
+	//Go through the actions and take an argmax over q-values
 	for (int i = 0; i < actions.size(); ++i){
 		Action action = actions.at(i);
 
@@ -63,30 +70,38 @@ Action qLearningAgent::computeActionFromQValues(){
 			bestValue = qValue;
 		}
 	}
+	//Randomly select an action to return from the list of all possible 
+	//best actions determined by the previous argmax
 	int bestActionIndex = bestActionIndices.at(std::rand() % bestActionIndices.size());
 	return actions.at(bestActionIndex);
 }
 
+//Returns the current reward belief for a state action pair
+// where the state is the current environment state.
+
 float qLearningAgent::getQValue(const Action& action) {
 	State state(environment->getCurrentState());
 	StateAction sa(state, action);
-
-
 	//if beliefDict contains sa then return the value for sa, else 0.0f
-	return (beliefDict.count(sa) > 0) ? beliefDict.at(sa) : 0.0f; //TODO: THIS MIGHT BE A BAD IDEA
-	//return (beliefDict.count(sa) > 0) ? beliefDict.at(sa) : 0.0f; //TODO: 
+	return (beliefDict.count(sa) > 0) ? beliefDict.at(sa) : 0.0f; 
 
 }
 
+//Takes a maximum over all possible Q-values to determine the current belief of a state value.
 float qLearningAgent::computeValueFromQValues(){
   const std::vector<Action>& actions = environment->getPossibleActions();
 
-	if (actions.size() == 0) {
-		return 0.0f;
-	}
+  	//  As before, get possible actions is nonempty in our implementations, so that this check is not necessary
 
-	float bestValue = -10000000.0f; //TODO: check if there is negative inf in C++
+	// if (actions.size() == 0) {
+	// 	return 0.0f;
+	// }
 
+  	//This is orders of magnitude than any negative rewards we give, so we can be sure that the best
+	//Q-value exceeds this initialization
+	float bestValue = -10000000.0f; 
+
+	//Iterate through possible actions from the current state and find the maximum q-value associated to any of these
 	for (int i = 0; i < actions.size(); ++i){
 		Action action = actions.at(i);
 		float qValue = getQValue(action);
