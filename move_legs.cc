@@ -43,7 +43,7 @@ using namespace gazebo;
       CSumCount = 0;
       CSum = 0;
       PrevCSum = 0;
-
+      totalIterations = 0;
       //set the method OnUpdate() as a listener. It'll be called every time step.
       this->updateConnection = event::Events::ConnectWorldUpdateBegin(
           boost::bind(&MoveLegs::OnUpdate, this, _1));
@@ -134,7 +134,9 @@ using namespace gazebo;
     //reward += std::abs(relativeRotation.x);
     // }
 
-    cout << "\nreward " << reward;
+    totalIterations++;
+
+    cout << "\nreward " << reward << "100cm/s  and what's the iteration? " << totalIterations;
 
     //Keep a count to track the average reward, and ensure that it is increasing (that the model is learning)
     if (CSumCount > 1000) {
@@ -202,7 +204,7 @@ using namespace gazebo;
     //this is going to alwasy be between 0 - 17, controls which joint we're interested in.
     int jointCount;
     //this will be between 0 and some number.
-    int count;
+    int count, totalIterations;
     std::vector<State> last5States;
 
     //save the last cumulative sum of the reward and the count so we can get some measure of if our model is improving
